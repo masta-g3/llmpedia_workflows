@@ -1,0 +1,90 @@
+# Tweet Types Configuration
+# This file defines the structure and generation rules for different types of tweet threads
+
+# Selection weights for random tweet type selection
+# You can define multiple weight sets for different scenarios
+# Each weight set is a dictionary mapping tweet type names to their selection weights
+# The weights don't need to sum to 1, they will be normalized automatically
+selection:
+  # Default weights used for standard operation
+  default_weights:
+    punchline: 0.8    # 70% chance of selecting punchline tweets
+    insight_v5: 0.2   # 30% chance of selecting insight tweets
+    fable: 0.0        # 0% chance of selecting fable tweets (effectively disabled)
+  
+  # Example of an alternative weight set that could be used for special occasions
+  # Uncomment and modify as needed
+  # special_occasion:
+  #   punchline: 0.4
+  #   insight_v5: 0.3
+  #   fable: 0.3
+
+# Tweet type definitions
+tweet_types:
+  insight_v5:
+    name: "Insight Thread"
+    description: "A thread with paper insights, first page, and links"
+    weight: 0.3  # Selection weight for this tweet type (used if no weight set is specified)
+    tweets:
+      - position: 0
+        content:
+          content_type: "function"
+          content: "generate_insight_content"
+          description: "Main insight about the paper"
+        images:
+          - source_type: "function"
+            source: "get_art_image"
+            description: "Paper art image"
+          - source_type: "function"
+            source: "get_first_page"
+            description: "Paper first page"
+      - position: 1
+        content:
+          content_type: "function"
+          content: "generate_links_content"
+          description: "Links to paper and resources"
+  
+  punchline:
+    name: "Punchline Tweet"
+    description: "A concise tweet with paper punchline and selected figure"
+    weight: 0.7  # Selection weight for this tweet type (used if no weight set is specified)
+    tweets:
+      - position: 0
+        content:
+          content_type: "function"
+          content: "generate_punchline_content"
+          description: "Paper punchline"
+        images:
+          - source_type: "function"
+            source: "select_punchline_image"
+            description: "Selected figure from paper"
+      - position: 1
+        content:
+          content_type: "function"
+          content: "generate_links_content"
+          description: "Links to paper and resources"
+
+  fable:
+    name: "Fable Tweet"
+    description: "A creative fable-style tweet about the paper"
+    weight: 0.0  # Selection weight for this tweet type (currently disabled)
+    tweets:
+      - position: 0
+        content:
+          content_type: "function"
+          content: "generate_fable_content"
+          description: "Paper fable"
+        images:
+          - source_type: "function"
+            source: "get_art_image"
+            description: "Paper art image"
+      - position: 1
+        content:
+          content_type: "function"
+          content: "generate_links_content"
+          description: "Links to paper and resources"
+      - position: 2
+        content:
+          content_type: "function"
+          content: "generate_author_tweet"
+          description: "Related discussion from paper authors" 
