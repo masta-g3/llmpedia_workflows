@@ -850,7 +850,7 @@ def collect_llm_tweets(logger: Optional[logging.Logger] = None, max_tweets: int 
     logger = logger or get_console_logger()
     logger.info("Starting collection of LLM-related tweets")
 
-    browser = setup_browser(logger, headless=True)
+    browser = setup_browser(logger, headless=False)
     current_batch = []
     tweets_checked = 0
 

@@ -35,11 +35,11 @@ def main():
 
         logger.info(f"[{idx}/{total_papers}] Narrating: {arxiv_code} - '{paper_title}'")
         narrative = vs.convert_notes_to_narrative(
-            paper_title, paper_notes, model="claude-3-5-sonnet-20241022"
+            paper_title, paper_notes, model="claude-3-7-sonnet-20250219"
         )
         
         copywritten = vs.copywrite_summary(
-            paper_title, paper_notes, narrative, model="claude-3-5-sonnet-20241022"
+            paper_title, paper_notes, narrative, model="claude-3-7-sonnet-20250219"
         )
         
         paper_db.insert_recursive_summary(arxiv_code, copywritten)

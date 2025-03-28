@@ -65,7 +65,7 @@ def main(date_str: str):
             )
             if summary:
                 previous_summaries.append(summary)
-        
+
         previous_themes = "\n".join([s.split("\n")[0] for s in previous_summaries])
         logger.info("Retrieved previous 3 weeks' summaries")
     except:
@@ -115,7 +115,7 @@ def main(date_str: str):
     ## Generate summary.
     logger.info("Generating weekly report")
     weekly_summary_obj = vs.generate_weekly_report(
-        weekly_content_md, model="claude-3-7-sonnet-20250219"
+        weekly_content_md, llm_model="gemini/gemini-2.5-pro-exp-03-25"
     )
     weekly_summary_obj = (
         weekly_summary_obj.replace("<new_developments_findings>", "")
@@ -125,7 +125,7 @@ def main(date_str: str):
 
     logger.info("Generating weekly highlight")
     weekly_highlight = vs.generate_weekly_highlight(
-        weekly_content_md, model="claude-3-7-sonnet-20250219"
+        weekly_content_md, llm_model="gemini/gemini-2.5-pro-exp-03-25"
     )
 
     ## Format content.
@@ -165,5 +165,5 @@ def main(date_str: str):
 
 if __name__ == "__main__":
     ## Use provided date or default to 2024-10-07
-    date_str = sys.argv[1] if len(sys.argv) == 2 else "2025-02-12"
+    date_str = sys.argv[1] if len(sys.argv) == 2 else "2025-03-10"
     main(date_str)

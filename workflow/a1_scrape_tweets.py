@@ -27,6 +27,7 @@ phone = os.getenv("TWITTER_PHONE")
 tweet_accounts = [
     "_reachsumit",
     "ADarmouni",
+    "arxivdigests",
     "rohanpaul_ai",
     "iScienceLuvr",
     "arankomatsuzaki",

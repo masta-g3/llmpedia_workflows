@@ -71,7 +71,7 @@ def run_instructor_query(
                 messages.insert(0, {"role": "system", "content": system_message})
 
     max_retries = 3
-    retry_delay = 5  # seconds
+    retry_delay = 25  # seconds
     
     for attempt in range(max_retries):
         try:
@@ -97,6 +97,8 @@ def run_instructor_query(
                 usage = completion_obj.usage
             break
         except Exception as e:
+            print(f"Error: {e}")
+            print(f"Attempt: {attempt}")
             if (attempt < max_retries - 1 
                 and ("overloaded_error" in str(e) or isinstance(e, InternalServerError))):
                 time.sleep(retry_delay * (attempt + 1))

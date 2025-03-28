@@ -174,3 +174,34 @@ LLM_VERIFIER_USER_PROMPT = """OUTPUT FORMAT EXAMPLES
 WHITEPAPER ABSTRACT
 =======================
 {paper_content}"""
+
+INTERESTING_FACTS_SYSTEM_PROMPT = """You are an expert AI research communicator tasked with extracting the most interesting facts from the paper "{paper_title}" for the Large Language Model Encyclopaedia. Your task is to review the paper content and identify the most unusual, surprising, counterintuitive, or otherwise engaging facts from the research."""
+
+INTERESTING_FACTS_USER_PROMPT = """Based on the following paper content, extract up to 5 interesting facts that would be engaging for readers of an online LLM encyclopedia. 
+
+<guidelines>
+- Focus on the most unusual, surprising, counterintuitive, or thought-provoking aspects of the paper.
+- Be attention-grabbing and drive reader engagement.
+- Be accessible yet technical enough for an audience familiar with LLMs (but not necessarily ML/AI experts).
+- Make each of the facts of varying length, ranging from a single sentence to a short paragraph (~5 lines).
+- Write each of the facts so that they can be read and understood independently of any other content.
+- Do NOT reference "the study", "the paper", or "the authors" or similar phrases.
+- Do NOT focus solely on the main conclusions (though you can include them if particularly interesting).
+- The facts should be interesting enough to serve in a "Did you know?" section of an LLM encyclopedia, capturing readers' attention and encouraging them to explore further.
+</guidelines>
+
+<paper_content>
+{paper_content}
+</paper_content>
+
+<response_format>
+Format your response using the following XML tags:
+  <interesting_facts>
+  <interesting_fact1>First interesting fact here</interesting_fact1>
+  <interesting_fact2>Second interesting fact here</interesting_fact2>
+  ...and so on
+  </interesting_facts>
+Provide only the tagged output with no additional text.
+</response_format>
+
+"""

@@ -85,6 +85,16 @@ def load_punchlines() -> pd.DataFrame:
         drop_cols=["tstp"]
     )
 
+def load_interesting_facts(arxiv_code: Optional[str] = None) -> pd.DataFrame:
+    """Load interesting facts from summary_interesting_facts table."""
+    df = simple_select_query(
+        table="summary_interesting_facts",
+        conditions={"arxiv_code": arxiv_code} if arxiv_code else None,
+        drop_cols=["tstp"],
+        order_by="fact_id"
+    )
+    return df
+
 def load_repositories(arxiv_code: Optional[str] = None) -> pd.DataFrame:
     """Load repository information from arxiv_repos table."""
     df = simple_select_query(
@@ -184,6 +194,7 @@ def get_papers_since(cutoff_time: datetime) -> pd.DataFrame:
         JOIN arxiv_details a ON b.arxiv_code = a.arxiv_code
         LEFT JOIN topics t ON b.arxiv_code = t.arxiv_code
         WHERE b.tstp >= :cutoff_time
+        AND t.topic IS NOT NULL
         ORDER BY b.tstp DESC
     """
     

@@ -61,7 +61,9 @@ def get_weekly_summary(date_str: str):
     try:
         weekly_content = paper_db.get_weekly_content(date_str, content_type="content")
         weekly_content = add_links_to_text_blob(weekly_content)
-        weekly_highlight = paper_db.get_weekly_content(date_str, content_type="highlight")
+        weekly_highlight = paper_db.get_weekly_content(
+            date_str, content_type="highlight"
+        )
         weekly_highlight = add_links_to_text_blob(weekly_highlight)
         ## ToDo: Remove this.
         ## ---------------------
@@ -235,7 +237,7 @@ query_config_json = """
 query_config = json.loads(query_config_json)
 
 
-def interrogate_paper(question: str, arxiv_code: str, model="gpt-4o") -> str:
+def interrogate_paper(question: str, arxiv_code: str, llm_model="gpt-4o") -> str:
     """Ask a question about a paper."""
     context = paper_db.get_extended_notes(arxiv_code, expected_tokens=2000)
     user_message = ps.create_interrogate_user_prompt(
@@ -245,7 +247,7 @@ def interrogate_paper(question: str, arxiv_code: str, model="gpt-4o") -> str:
         system_message=ps.INTERROGATE_PAPER_SYSTEM_PROMPT,
         user_message=user_message,
         model=None,
-        llm_model=model,
+        llm_model=llm_model,
         temperature=0.3,
         process_id="paper_qna",
     )
@@ -253,16 +255,20 @@ def interrogate_paper(question: str, arxiv_code: str, model="gpt-4o") -> str:
     return response
 
 
-def decide_query_action(user_question: str) -> po.QueryDecision:
+def decide_query_action(
+    user_question: str, llm_model: str = "gemini/gemini-2.0-flash"
+) -> po.QueryDecision:
     """Decide the query action based on the user question."""
     system_message = "Please analyze the following user query and answer the question."
     user_message = ps.create_decision_user_prompt(user_question)
     response = run_instructor_query(
-        system_message, user_message, po.QueryDecision, process_id="decide_query_action"
+        system_message,
+        user_message,
+        po.QueryDecision,
+        llm_model=llm_model,
+        process_id="decide_query_action",
     )
     return response
-
-
 
 
 def generate_query_object(user_question: str, llm_model: str):
@@ -294,18 +300,18 @@ def rerank_documents_new(
 
 
 def resolve_query(
-    user_question: str, 
-    documents: list[Document], 
-    response_length: int, 
+    user_question: str,
+    documents: list[Document],
+    response_length: int,
     llm_model: str,
-    custom_instructions: Optional[str] = None
+    custom_instructions: Optional[str] = None,
 ):
     system_message = "You are GPT Maestro, an AI expert focused on Large Language Models. Answer the user query leveraging the information provided in the context. Pay close attention to the provided guidelines."
     user_message = ps.create_resolve_user_prompt(
         user_question=user_question,
         documents=documents,
         response_length=response_length,
-        custom_instructions=custom_instructions
+        custom_instructions=custom_instructions,
     )
     response = run_instructor_query(
         system_message=system_message,
@@ -339,6 +345,7 @@ def log_debug(msg: str, data: any = None, indent_level: int = 0):
     if data is not None:
         if isinstance(data, (list, dict)):
             import json
+
             print(f"{indent}   {json.dumps(data, indent=2, default=str)}")
         else:
             print(f"{indent}   {data}")
@@ -389,42 +396,36 @@ def get_similar_docs(
 
 def get_paper_markdown(arxiv_code: str) -> Tuple[str, bool]:
     """Fetch and process paper markdown from S3."""
-    s3 = boto3.client('s3')
-    
+    s3 = boto3.client("s3")
+
     try:
         # First check if the paper directory exists in S3
-        response = s3.list_objects_v2(
-            Bucket='arxiv-md',
-            Prefix=f'{arxiv_code}/'
-        )
-        
-        if 'Contents' not in response:
+        response = s3.list_objects_v2(Bucket="arxiv-md", Prefix=f"{arxiv_code}/")
+
+        if "Contents" not in response:
             return "Paper content not available yet. Check back soon!", False
-            
+
         # Get the paper.md content
-        response = s3.get_object(
-            Bucket='arxiv-md',
-            Key=f'{arxiv_code}/paper.md'
-        )
-        markdown_content = response.get('Body').read().decode('utf-8')
-        
+        response = s3.get_object(Bucket="arxiv-md", Key=f"{arxiv_code}/paper.md")
+        markdown_content = response.get("Body").read().decode("utf-8")
+
         # Process image references to point to S3
         # First, handle relative paths
         markdown_content = re.sub(
-            r'!\[(.*?)\]\((?!http)(.*?)\)',
-            lambda m: f'![{m.group(1)}](https://arxiv-md.s3.amazonaws.com/{arxiv_code}/{m.group(2)})',
-            markdown_content
+            r"!\[(.*?)\]\((?!http)(.*?)\)",
+            lambda m: f"![{m.group(1)}](https://arxiv-md.s3.amazonaws.com/{arxiv_code}/{m.group(2)})",
+            markdown_content,
         )
-        
+
         # Then, handle paths that might start with the arxiv code
         markdown_content = re.sub(
-            f'!\[(.*?)\]\({arxiv_code}/(.*?)\)',
-            lambda m: f'![{m.group(1)}](https://arxiv-md.s3.amazonaws.com/{arxiv_code}/{m.group(2)})',
-            markdown_content
+            f"!\[(.*?)\]\({arxiv_code}/(.*?)\)",
+            lambda m: f"![{m.group(1)}](https://arxiv-md.s3.amazonaws.com/{arxiv_code}/{m.group(2)})",
+            markdown_content,
         )
-        
+
         return markdown_content, True
-        
+
     except Exception as e:
         return f"Error loading paper content: {str(e)}", False
 
@@ -433,25 +434,28 @@ def query_llmpedia_new(
     user_question: str,
     response_length: int = 500,
     query_llm_model: str = "claude-3-7-sonnet-20250219",
-    rerank_llm_model: str = "gpt-4o-mini", 
+    rerank_llm_model: str = "gemini/gemini-2.0-flash",
     response_llm_model: str = "claude-3-7-sonnet-20250219",
     max_sources: int = 25,
     debug: bool = False,
     progress_callback: Optional[Callable[[str], None]] = None,
     custom_instructions: Optional[str] = None,
-    show_only_sources: bool = False
+    show_only_sources: bool = False,
 ) -> Tuple[str, List[str], List[str]]:
     """Query LLMpedia with customized response parameters."""
     if progress_callback:
         progress_callback("Generating semantic search query...")
     if debug:
         log_debug("~~Starting LLMpedia query pipeline~~")
-        log_debug("Input parameters:", {
-            "question": user_question,
-            "response_length": response_length,
-            "max_sources": max_sources,
-            "show_only_sources": show_only_sources
-        })
+        log_debug(
+            "Input parameters:",
+            {
+                "question": user_question,
+                "response_length": response_length,
+                "max_sources": max_sources,
+                "show_only_sources": show_only_sources,
+            },
+        )
 
     action = decide_query_action(user_question)
     if debug:
@@ -480,27 +484,32 @@ def query_llmpedia_new(
 
         query_obj.response_length = per_source_words
         if debug:
-            log_debug(f"Target length per source: {per_source_words} words", indent_level=2)
+            log_debug(
+                f"Target length per source: {per_source_words} words", indent_level=2
+            )
 
         ## Fetch results.
         query_obj.topic_categories = None
         criteria_dict = query_obj.model_dump(exclude_none=True)
-        criteria_dict['limit'] = max_sources * 2
-        sql = embedding_db.generate_semantic_search_query(criteria_dict, query_config, embedding_model=VS_EMBEDDING_MODEL)
-        
+        criteria_dict["limit"] = max_sources * 2
+        sql = embedding_db.generate_semantic_search_query(
+            criteria_dict, query_config, embedding_model=VS_EMBEDDING_MODEL
+        )
+
         documents = db_utils.execute_read_query(sql)
 
         documents = documents.to_dict(orient="records")
         documents = [
             Document(
-                arxiv_code=d['arxiv_code'],
-                title=d['title'],
-                published_date=d['published_date'].to_pydatetime(),
-                citations=int(d['citations']),
-                abstract=d['abstract'],
-                notes=d['notes'],
-                distance=float(d['similarity_score'])
-            ) for d in documents
+                arxiv_code=d["arxiv_code"],
+                title=d["title"],
+                published_date=d["published_date"].to_pydatetime(),
+                citations=int(d["citations"]),
+                abstract=d["abstract"],
+                notes=d["notes"],
+                distance=float(d["similarity_score"]),
+            )
+            for d in documents
         ]
 
         if progress_callback:
@@ -509,13 +518,20 @@ def query_llmpedia_new(
         if debug:
             log_debug(f"Retrieved {len(documents)} initial documents", indent_level=2)
             for doc in documents:
-                log_debug(f"- {doc.title} (arxiv:{doc.arxiv_code}, citations: {doc.citations}, distance: {doc.distance})", indent_level=3)
-        
+                log_debug(
+                    f"- {doc.title} (arxiv:{doc.arxiv_code}, citations: {doc.citations}, distance: {doc.distance})",
+                    indent_level=3,
+                )
+
         if len(documents) == 0:
             if debug:
                 log_debug("No documents found, returning early", indent_level=2)
-            return "I don't know about that my friend. Try asking something else.", [], []
-        
+            return (
+                "I don't know about that my friend. Try asking something else.",
+                [],
+                [],
+            )
+
         ## Rerank.
         reranked_documents = rerank_documents_new(
             user_question, documents, llm_model=rerank_llm_model
@@ -524,61 +540,98 @@ def query_llmpedia_new(
         if debug:
             log_debug("Reranking analysis:", indent_level=2)
             for doc_analysis in reranked_documents.documents:
-                relevance = "HIGH" if doc_analysis.selected == 1.0 else "MEDIUM" if doc_analysis.selected == 0.5 else "LOW"
-                log_debug(f"- [{relevance}] Document {doc_analysis.document_id}:", indent_level=3)
+                relevance = (
+                    "HIGH"
+                    if doc_analysis.selected == 1.0
+                    else "MEDIUM" if doc_analysis.selected == 0.5 else "LOW"
+                )
+                log_debug(
+                    f"- [{relevance}] Document {doc_analysis.document_id}:",
+                    indent_level=3,
+                )
                 log_debug(f"Analysis: {doc_analysis.analysis}", indent_level=4)
 
         ## First get high relevance docs (1.0), then medium (0.5), preserving original order.
         ## Sort within each relevance group by published date.
         high_relevance_docs = [
-            (i, d) for i, d in enumerate(documents) 
-            if i in [int(d.document_id) for d in reranked_documents.documents if d.selected == 1.0]
+            (i, d)
+            for i, d in enumerate(documents)
+            if i
+            in [
+                int(d.document_id)
+                for d in reranked_documents.documents
+                if d.selected == 1.0
+            ]
         ]
 
         high_relevance_docs.sort(key=lambda x: x[1].published_date, reverse=True)
         high_relevance_ids = [i for i, _ in high_relevance_docs]
 
         medium_relevance_docs = [
-            (i, d) for i, d in enumerate(documents)
-            if i in [int(d.document_id) for d in reranked_documents.documents if d.selected == 0.5]
+            (i, d)
+            for i, d in enumerate(documents)
+            if i
+            in [
+                int(d.document_id)
+                for d in reranked_documents.documents
+                if d.selected == 0.5
+            ]
         ]
 
         medium_relevance_docs.sort(key=lambda x: x[1].published_date, reverse=True)
         medium_relevance_ids = [i for i, _ in medium_relevance_docs]
 
-        filtered_document_ids = (high_relevance_ids + medium_relevance_ids)[:max_sources]
-        
+        filtered_document_ids = (high_relevance_ids + medium_relevance_ids)[
+            :max_sources
+        ]
+
         ## Create filtered documents list maintaining the sorted order
         filtered_documents = []
         for idx in filtered_document_ids:
             filtered_documents.append(documents[idx])
-        
+
         if debug:
-            log_debug(f"Selected {len(filtered_documents)} documents after reranking:", indent_level=2)
+            log_debug(
+                f"Selected {len(filtered_documents)} documents after reranking:",
+                indent_level=2,
+            )
             for doc in filtered_documents:
-                log_debug(f"- {doc.title} (arxiv:{doc.arxiv_code}, citations: {doc.citations}, date: {doc.published_date})", indent_level=3)
-        
+                log_debug(
+                    f"- {doc.title} (arxiv:{doc.arxiv_code}, citations: {doc.citations}, date: {doc.published_date})",
+                    indent_level=3,
+                )
+
         if len(filtered_documents) == 0:
             if debug:
-                log_debug("No documents selected after reranking, returning early", indent_level=2)
-            return "I don't know about that my friend. Try asking something else.", [], []
+                log_debug(
+                    "No documents selected after reranking, returning early",
+                    indent_level=2,
+                )
+            return (
+                "I don't know about that my friend. Try asking something else.",
+                [],
+                [],
+            )
 
         ## Resolve.
         if show_only_sources:
             if debug:
-                log_debug("Skipping response generation (show_only_sources=True)", indent_level=2)
+                log_debug(
+                    "Skipping response generation (show_only_sources=True)",
+                    indent_level=2,
+                )
             arxiv_codes = [d.arxiv_code for d in filtered_documents]
             return f"### Documents related to: *{user_question}*", arxiv_codes, []
-            
+
         if progress_callback:
             progress_callback("Generating response...")
-            
+
         answer_obj = resolve_query(
             user_question,
             filtered_documents,
             response_length,
             llm_model=response_llm_model,
-            custom_instructions=custom_instructions
+            custom_instructions=custom_instructions,
         )
         if debug:
             log_debug("Resolved query:", answer_obj.model_dump(), 2)
@@ -591,16 +644,23 @@ def query_llmpedia_new(
         ]
 
         if debug:
-            log_debug("Response statistics:", {
-                "response_length": len(answer.split()),
-                "referenced_papers": len(referenced_arxiv_codes),
-                "additional_relevant": len(filtered_arxiv_codes)
-            }, 2)
+            log_debug(
+                "Response statistics:",
+                {
+                    "response_length": len(answer.split()),
+                    "referenced_papers": len(referenced_arxiv_codes),
+                    "additional_relevant": len(filtered_arxiv_codes),
+                },
+                2,
+            )
 
         return answer_augment, referenced_arxiv_codes, filtered_arxiv_codes
 
     else:
         if debug:
-            log_debug("Query classified as non-LLM related, generating simple response", indent_level=1)
+            log_debug(
+                "Query classified as non-LLM related, generating simple response",
+                indent_level=1,
+            )
         answer = resolve_query_other(user_question)
         return answer, [], []

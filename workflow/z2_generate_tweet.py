@@ -28,7 +28,7 @@ IMG_PATH = os.path.join(DATA_PATH, "arxiv_art")
 PAGE_PATH = os.path.join(DATA_PATH, "arxiv_first_page")
 
 ## Constants
-DEFAULT_MODEL = "claude-3-5-sonnet-20241022"
+DEFAULT_MODEL = "claude-3-7-sonnet-20250219"
 
 from utils.logging_utils import setup_logger
 import utils.vector_store as vs
@@ -98,7 +98,8 @@ def prepare_tweet_facts(arxiv_code: str, tweet_type: str) -> str:
         paper_details = paper_db.load_arxiv(arxiv_code)
         title = paper_details["title"].iloc[0]
         author = paper_details["authors"].iloc[0]
-        content = paper_db.get_extended_notes(arxiv_code, expected_tokens=4500)
+        # content = paper_db.get_extended_notes(arxiv_code, expected_tokens=10000)
+        content = au.get_paper_markdown(arxiv_code)
         return f"**Title: {title}**\n**Authors: {author}**\n{content}"
 
 class TweetContentGenerator:
@@ -166,8 +167,7 @@ class InsightGenerator(TweetContentGenerator):
         tweet_facts = prepare_tweet_facts(self.arxiv_code, "insight_v5")
         tweet_obj = vs.write_tweet(
             tweet_facts=tweet_facts,
-            tweet_type="insight_v5",
-            model=DEFAULT_MODEL,
+            llm_model=DEFAULT_MODEL,
             temperature=0.9,
         )
         publish_date = self.paper_details["published"].strftime("%b %d, %Y")
@@ -526,7 +526,9 @@ class TweetGenerator:
                 else:
                     ## Fall back to legacy content generation
                     if func_name == "generate_links_content":
+                        paper_title = paper_details["title"]
                         content = [
+                            f"From: {boldify(paper_title)}",
                             f"arxiv link: https://arxiv.org/abs/{arxiv_code}",
                             f"llmpedia link: https://llmpedia.streamlit.app/?arxiv_code={arxiv_code}",
                         ]

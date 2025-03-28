@@ -136,10 +136,9 @@ def get_arxiv_id_list(table_name: str = "arxiv_details") -> List[str]:
         with psycopg2.connect(**db_params) as conn:
             with conn.cursor() as cur:
                 cur.execute(f"SELECT DISTINCT arxiv_code FROM {table_name}")
-                return [row[0] for row in cur.fetchall()]
+                return [row[0] for row in cur.fetchall() if row[0] and len(row[0]) > 0]
     except Exception as e:
         raise e
-    
 
 def get_arxiv_title_dict() -> Dict[str, str]:
     """Get a mapping of arxiv codes to their titles."""

@@ -266,27 +266,33 @@ def rephrase_title(title, model="gpt-4o"):
     return phrase
 
 
-def generate_weekly_report(weekly_content_md: str, model="claude-3-5-sonnet-20250222"):
+def generate_weekly_report(
+    weekly_content_md: str, llm_model="claude-3-5-sonnet-20250222"
+):
     """Generate weekly report."""
     weekly_report = run_instructor_query(
         ps.WEEKLY_SYSTEM_PROMPT,
-        ps.WEEKLY_USER_PROMPT.format(weekly_content=weekly_content_md),
+        ps.WEEKLY_USER_PROMPT.format(
+            weekly_content=weekly_content_md, base_style_guidelines=ps.TWEET_BASE_STYLE
+        ),
         # model=po.WeeklyReview,
-        llm_model=model,
+        llm_model=llm_model,
         temperature=1,
         process_id="generate_weekly_report",
-        thinking={"type": "enabled", "budget_tokens": 8192},
+        # thinking={"type": "enabled", "budget_tokens": 8192},
         max_tokens=50000,
     )
     return weekly_report
 
 
-def generate_weekly_highlight(weekly_content_md: str, model="claude-3-5-sonnet-20250222"):
+def generate_weekly_highlight(
+    weekly_content_md: str, llm_model="claude-3-5-sonnet-20250222"
+):
     """Generate weekly highlight."""
     weekly_highlight = run_instructor_query(
         ps.WEEKLY_SYSTEM_PROMPT,
         ps.WEEKLY_HIGHLIGHT_USER_PROMPT.format(weekly_content=weekly_content_md),
-        llm_model=model,
+        llm_model=llm_model,
         temperature=0.5,
         process_id="generate_weekly_highlight",
     )
@@ -304,6 +310,7 @@ def extract_document_repo(paper_content: str, model="gpt-4o"):
         process_id="extract_document_repo",
     )
     return weekly_repos
+
 
 def select_most_interesting_paper(
     arxiv_abstracts: str,
@@ -329,8 +336,7 @@ def select_most_interesting_paper(
 
 def write_tweet(
     tweet_facts: str,
-    tweet_type="new_review",
-    model="claude-3-5-sonnet-20241022",
+    llm_model="claude-3-5-sonnet-20241022",
     most_recent_tweets: str = None,
     recent_llm_tweets: str = None,
     temperature: float = 0.8,
@@ -347,7 +353,7 @@ def write_tweet(
         system_prompt,
         user_prompt,
         model=po.Tweet,
-        llm_model=model,
+        llm_model=llm_model,
         temperature=temperature,
         process_id="write_tweet",
     )
@@ -375,7 +381,7 @@ def write_tweet_reply(
     kwargs = {}
     if thinking:
         kwargs["thinking"] = {"type": "enabled", "budget_tokens": 1024}
-    
+
     tweet = run_instructor_query(
         system_prompt,
         user_prompt,
@@ -383,14 +389,16 @@ def write_tweet_reply(
         temperature=temperature if not thinking else 1.0,
         process_id="write_tweet_reply",
         verbose=True,
-        **kwargs
+        **kwargs,
     )
     return tweet
 
 
-def select_tweet_reply(recent_llm_tweets: str,  
-                       recent_tweet_discussions: str,
-                       model: str = "claude-3-7-sonnet-20250219"):
+def select_tweet_reply(
+    recent_llm_tweets: str,
+    recent_tweet_discussions: str,
+    model: str = "claude-3-7-sonnet-20250219",
+):
     """Select a tweet reply."""
     system_prompt = ps.TWEET_SYSTEM_PROMPT
     user_prompt = ps.TWEET_SELECTOR_USER_PROMPT.format(
@@ -485,6 +493,33 @@ def write_tweet_reply_commonsense(
     return response
 
 
+def write_weekly_review_post(
+    report_date: str,
+    weekly_content: str,
+    weekly_highlight: str,
+    num_papers_str: str,
+    llm_model: str = "claude-3-5-sonnet-20241022",
+    temperature: float = 0.8,
+) -> str:
+    """Write a weekly review."""
+    system_prompt = ps.TWEET_SYSTEM_PROMPT
+    user_prompt = ps.TWEET_WEEKLY_REVIEW_USER_PROMPT.format(
+        report_date=report_date,
+        weekly_content=weekly_content,
+        weekly_highlight=weekly_highlight,
+        num_papers_str=num_papers_str,
+        base_style=ps.TWEET_BASE_STYLE,
+    )
+    response = run_instructor_query(
+        system_prompt,
+        user_prompt,
+        llm_model=llm_model,
+        temperature=temperature,
+        process_id="write_weekly_review_post",
+    )
+    return response
+
+
 def write_paper_matcher(
     tweet_text: str,
     paper_summaries: str,
@@ -498,7 +533,7 @@ def write_paper_matcher(
         tweet_text=tweet_text,
         paper_summaries=paper_summaries,
         base_style=ps.TWEET_BASE_STYLE,
-        previous_responses=previous_responses
+        previous_responses=previous_responses,
     )
     response = run_instructor_query(
         system_prompt,
@@ -659,6 +694,24 @@ def generate_paper_punchline(
     return punchline.strip()
 
 
+def generate_paper_interesting_facts(
+    paper_title: str,
+    paper_content: str,
+    model: str = "claude-3-5-sonnet-20241022",
+) -> str:
+    """Extract up to 5 interesting, unusual, or counterintuitive facts from the paper."""
+    interesting_facts = run_instructor_query(
+        ps.INTERESTING_FACTS_SYSTEM_PROMPT.format(paper_title=paper_title),
+        ps.INTERESTING_FACTS_USER_PROMPT.format(paper_content=paper_content),
+        llm_model=model,
+        temperature=1,
+        process_id="generate_paper_interesting_facts",
+        thinking={"type": "enabled", "budget_tokens": 2048},
+    )
+
+    return interesting_facts.strip()
+
+
 def analyze_paper_images(
     arxiv_code: str,
     model: str = "claude-3-5-sonnet-20241022",
@@ -715,16 +768,15 @@ Summary: {paper_details['summary'].iloc[0]}"""
     messages = format_vision_messages(
         images=base64_images,
         text=ps.IMAGE_ANALYSIS_USER_PROMPT.format(
-            paper_summary=paper_summary,
-            image_descriptions=image_descriptions
+            paper_summary=paper_summary, image_descriptions=image_descriptions
         ),
         model=model,
-        system_message=ps.IMAGE_ANALYSIS_SYSTEM_PROMPT
+        system_message=ps.IMAGE_ANALYSIS_SYSTEM_PROMPT,
     )
 
     response = run_instructor_query(
         system_message="",  # Not used when messages provided
-        user_message="",    # Not used when messages provided
+        user_message="",  # Not used when messages provided
         llm_model=model,
         model=po.ImageAnalysis,
         process_id="analyze_paper_images",
@@ -778,7 +830,7 @@ def analyze_tweet_patterns(
             tweets=tweets_text,
             start_date=start_date,
             end_date=end_date,
-            previous_entries=previous_entries
+            previous_entries=previous_entries,
         ),
         llm_model=model,
         temperature=temperature,
@@ -788,5 +840,5 @@ def analyze_tweet_patterns(
     ## Extract the response from the XML elements from the string
     thinking_process = response.split("<think>")[1].split("</think>")[0]
     response = response.split("<response>")[1].split("</response>")[0]
-    
+
     return thinking_process, response

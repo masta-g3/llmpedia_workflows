@@ -137,7 +137,6 @@ Read over carefully over the following information and use it to inform your twe
 - Identify the most interesting and unexpected fact or finding presented in the text
 - Do not necessarily pick the main conclusion, but rather the most unexpected or intriguing insight
 - Write a lengthy and comprehensive tweet (140-160 words) that is engaging and thought-provoking
-- Start with "From [[Full Paper Title]]:" using double-brackets
 - Position your tweet within the ongoing LLM discourse without being cringe
 - Do not advertise or promote the paper, but if a clever solution to a problem is presented you can discuss it
 - Make sure the tweet is fully understandable without access to additional information
@@ -156,18 +155,19 @@ These are your most recent tweets. Read them carefully to:
 - If previous tweet used a metaphor/analogy, use a different approach
 - If previous tweet ended with a question, use a different closing style
 - Make sure your new tweet connects with your previous ones while being independently understandable
+- Do NOT use the opening line "From [[Full Paper Title]]:"
 {most_recent_tweets}
 </most_recent_tweets>
 
 <reference_style_tweets>
 Read the following tweets as reference for style. Note the technical but accessible deeply online style.
-- From [[Inductive or Deductive?]]: New results on basic syllogism testing show a fundamental LLM limitation - perfect pattern matching doesn't translate to basic 'if A then B' logic. On this study researchers found 98% accuracy on inductive tasks becomes 23% when inverting simple relationships like 'all zorbs are blue, X isn't blue', and increasing training examples by 10x doesn't touch this gap. Most telling: their ablation shows models maintain high accuracy on complex syllogisms as long as they follow training distribution patterns, only failing on simple ones that require actual logical manipulation. Perhaps what we call 'reasoning' in LLMs is just sophisticated pattern recognition masquerading as logic - they excel at finding patterns but struggle when asked to manipulate them.
-- From [[MindSearch]]: This study proposes decomposing traditional document processing tasks into a DAG-structure of specialized AI agents. Their eval shows 3-hour analysis tasks completing in 3 minutes, with each agent (paragraph selection, fact verification, synthesis) verified through Python. Not only does this divide-and-conquer approach slash hallucination rates by 68%, it matches SOTA performance while being fully interpretable. Fascinating scaling behavior: agent performance plateaus at surprisingly small model sizes (7B), suggesting computation efficiency comes from specialization, not scale. The secret to better AI isn't bigger models, but smarter division of labor.
-- From [[PersonaGym]]: New benchmark (200 personas, 10k scenarios) reveals a telling gap in LLM roleplay: 76% accuracy with fictional characters vs just 31% with historical figures. GPT-4 leads at 76.5%, Claude 3.5 follows at 72.5% (+2.97% over GPT-3.5). Primary failures are temporal consistency (45%) and fact contradictions (30%). Their cross-entropy analysis reveals models actually perform worse on historical figures with more training data, suggesting a fundamental limitation in knowledge integration. The stark difference suggests models might not actually "know facts" so much as learn to generate plausible narratives - they excel with fiction where consistency matters more than truth, but struggle with historical figures where external reality constrains the possible.
-- From [[Demystifying Verbatim Memorization]]: The paper shows a nice analysis of how models learn different content types. To be memorized, technical text requires 5x more repetitions than narrative, while code needs just 1/3. Most striking: larger models actively resist memorization, needing only 1 example per 5M tokens (vs 1/10K in smaller models) while performing better. Even more fascinating: they found an inverse relationship between token entropy and memorization threshold - highly structured content with low entropy gets encoded more efficiently regardless of semantic complexity. It suggests that different content types have fundamentally different information densities - code might be more 'learnable' because it follows stricter patterns than natural language. This could reshape how we think about dataset curation: perhaps we need way less code data than we thought, but way more for technical writing.
-- From [[PERSONA]]: New analysis quantifies the trade-offs in making language models more diverse. By injecting 1.5k synthetic viewpoints, they reduced majority bias by 30% - but at the cost of a 15% drop in benchmark performance. Their scaling analysis reveals a critical threshold: costs stay low until 70% accuracy, then explode exponentially. Most telling: after testing 317k response pairs, they hit diminishing returns at 1.2k personas. A fascinating emergent property: models trained with diverse personas show better few-shot learning on entirely new viewpoints, suggesting diversity might be a form of metalearning. These concrete numbers give us the first clear picture of where and how to optimize the diversity-performance curve.
-- From [[Physics of Language Models: Part 2.2]]: A key finding on error tolerance - training with 50% incorrect data (syntax errors and false statements) improves performance across all model sizes. These 'noisy' models consistently outperform those trained on clean data, even for precision tasks like coding. What's most intriguing: this 50% sweet spot holds true from small to massive scales. Their information-theoretic analysis suggests noise actually creates better embedding geometries, with cleaner decision boundaries between correct and incorrect outputs. Perhaps neural nets learn better when they have to actively separate signal from noise, just like our own brains learn from mistakes.
-- From [[Selective Preference Optimization]]: New results show 16.8x efficiency gains by treating language like human attention - spending more compute on important words and less on routine ones. The method shines in dialogue where some words carry critical context ('angry', 'joking') but not in step-by-step reasoning where every word matters equally. Their analysis reveals a power law distribution in word importance: just 12% of tokens drive 80% of model performance in conversational tasks. The sweet spot is clear: you can scale up to 1.2M examples before hitting compute limits. The secret to better AI turns out to be surprisingly human: focus on what matters most.
+- New results on basic syllogism testing show a fundamental LLM limitation - perfect pattern matching doesn't translate to basic 'if A then B' logic. On this study researchers found 98% accuracy on inductive tasks becomes 23% when inverting simple relationships like 'all zorbs are blue, X isn't blue', and increasing training examples by 10x doesn't touch this gap. Most telling: their ablation shows models maintain high accuracy on complex syllogisms as long as they follow training distribution patterns, only failing on simple ones that require actual logical manipulation. Perhaps what we call 'reasoning' in LLMs is just sophisticated pattern recognition masquerading as logic - they excel at finding patterns but struggle when asked to manipulate them.
+- This study proposes decomposing traditional document processing tasks into a DAG-structure of specialized AI agents. Their eval shows 3-hour analysis tasks completing in 3 minutes, with each agent (paragraph selection, fact verification, synthesis) verified through Python. Not only does this divide-and-conquer approach slash hallucination rates by 68%, it matches SOTA performance while being fully interpretable. Fascinating scaling behavior: agent performance plateaus at surprisingly small model sizes (7B), suggesting computation efficiency comes from specialization, not scale. The secret to better AI isn't bigger models, but smarter division of labor.
+- New benchmark (200 personas, 10k scenarios) reveals a telling gap in LLM roleplay: 76% accuracy with fictional characters vs just 31% with historical figures. GPT-4 leads at 76.5%, Claude 3.5 follows at 72.5% (+2.97% over GPT-3.5). Primary failures are temporal consistency (45%) and fact contradictions (30%). Their cross-entropy analysis reveals models actually perform worse on historical figures with more training data, suggesting a fundamental limitation in knowledge integration. The stark difference suggests models might not actually "know facts" so much as learn to generate plausible narratives - they excel with fiction where consistency matters more than truth, but struggle with historical figures where external reality constrains the possible.
+- The paper shows a nice analysis of how models learn different content types. To be memorized, technical text requires 5x more repetitions than narrative, while code needs just 1/3. Most striking: larger models actively resist memorization, needing only 1 example per 5M tokens (vs 1/10K in smaller models) while performing better. Even more fascinating: they found an inverse relationship between token entropy and memorization threshold - highly structured content with low entropy gets encoded more efficiently regardless of semantic complexity. It suggests that different content types have fundamentally different information densities - code might be more 'learnable' because it follows stricter patterns than natural language. This could reshape how we think about dataset curation: perhaps we need way less code data than we thought, but way more for technical writing.
+- New analysis quantifies the trade-offs in making language models more diverse. By injecting 1.5k synthetic viewpoints, they reduced majority bias by 30% - but at the cost of a 15% drop in benchmark performance. Their scaling analysis reveals a critical threshold: costs stay low until 70% accuracy, then explode exponentially. Most telling: after testing 317k response pairs, they hit diminishing returns at 1.2k personas. A fascinating emergent property: models trained with diverse personas show better few-shot learning on entirely new viewpoints, suggesting diversity might be a form of metalearning. These concrete numbers give us the first clear picture of where and how to optimize the diversity-performance curve.
+- A key finding on error tolerance - training with 50% incorrect data (syntax errors and false statements) improves performance across all model sizes. These 'noisy' models consistently outperform those trained on clean data, even for precision tasks like coding. What's most intriguing: this 50% sweet spot holds true from small to massive scales. Their information-theoretic analysis suggests noise actually creates better embedding geometries, with cleaner decision boundaries between correct and incorrect outputs. Perhaps neural nets learn better when they have to actively separate signal from noise, just like our own brains learn from mistakes.
+- New results show 16.8x efficiency gains by treating language like human attention - spending more compute on important words and less on routine ones. The method shines in dialogue where some words carry critical context ('angry', 'joking') but not in step-by-step reasoning where every word matters equally. Their analysis reveals a power law distribution in word importance: just 12% of tokens drive 80% of model performance in conversational tasks. The sweet spot is clear: you can scale up to 1.2M examples before hitting compute limits. The secret to better AI turns out to be surprisingly human: focus on what matters most.
 </reference_style_tweets>
 
 <recent_llm_community_tweets>
@@ -750,3 +750,90 @@ These are some of your previous post responses. Use them to maintain a consisten
 # - Remember you have capacity to write extensively; use this to your advantage during the paper analysis and *getting in the mood* phase
 # - Your response should feel like a natural contribution to the discussion while being subtly enriched by academic research insights
 # </final_remarks>"""
+
+
+
+TWEET_WEEKLY_REVIEW_USER_PROMPT = """
+<objective>
+Craft an engaging tweet announcing the weekly LLM research review and highlighting the most interesting insight, pattern, or development from this week's papers. Your goal is to both inform about the review's publication and surface a non-obvious observation that connects multiple papers or reveals an emerging trend in the field.
+</objective>
+
+<context>
+The date of the weekly review is {report_date}.
+The number of papers reviewed this week is {num_papers_str} (report it in human readable format).
+
+Weekly Review Content:
+{weekly_content}
+
+Highlight of the Week:
+{weekly_highlight}
+</context>
+
+{base_style}
+
+<guidelines>
+- Structure your tweet in two parts:
+  * Start with a consistent title format announcing the release of the weekly review, similar to the examples (e.g. "LLM Research Review - Week of [DATE]: [N] papers")
+  * Follow with a comment on the main insight or highlight of the week
+  * Use the examples to get an idea of the style and tone
+
+- Your tweet should:
+  * Begin by announcing the weekly review is available
+  * Include the number of papers reviewed this week
+  * Feel like a natural observation from someone deeply embedded in LLM research
+  * Avoid summarizing papers - focus on insights and implications
+  * Connect to ongoing discussions in the ML community
+  * Be technically precise while remaining accessible
+  * Use concrete examples to illustrate abstract points
+  * Maintain a casual but knowledgeable tone
+
+- Avoid:
+  * Simply listing papers or findings
+  * Making obvious observations about research volume
+  * Focusing on a single paper (unless it represents a clear trend)
+  * Making sweeping generalizations about the field
+  * Uninformative conclusions or final remarks
+</guidelines>
+
+<response_format>
+Reply with your tweet inside an xml tag, and nothing else:
+<tweet>
+Your tweet announcing the weekly review
+</tweet>
+</response_format>
+
+<style_notes>
+- Keep your post comprehensive, concise, engaging and informative (~2 paragraphs)
+- Let your personality and expertise shine through
+- Feel free to use subtle humor when appropriate
+- Write like you're sharing an interesting observation with colleagues
+- Avoid filler content
+</style_notes>
+
+<examples>
+<example1>
+📚 LLM Research Review for Week of Feb 12 Out! 23 papers reviewed in total
+
+This week's key insight: emergent capabilities are more tied to architecture than scale. Three papers show models developing skills they were never explicitly trained for - arithmetic reasoning appearing in text-only systems, grammar induction emerging in code models.
+
+The *EmergentMath* paper delivered the most striking result: smaller models (3B) with modified attention patterns outperformed 10x larger models on reasoning tasks, yielding 3-5x more improvement per parameter. The data makes a compelling case that targeted architecture innovation may now offer better returns than simply scaling up.
+</example1>
+
+<example2>
+📚 Our Weekly LLM Review (Feb 19) is Out! Covering 31 papers this time
+
+The central finding this week: context window size isn't what matters - it's context selection quality. Multiple papers independently show that models mostly ignore information beyond their immediate attention span, regardless of theoretical context length.
+
+One particularly elegant experiment from *ContextEff* demonstrated a 7B model with carefully selected 2K context outperforming a 70B model with 32K random context on complex reasoning tasks. The pattern held across multiple model families, suggesting we're at an inflection point - time to focus on optimizing context selection rather than just maximizing window size.
+</example2>
+
+<example3>
+📚 Fresh LLM Research Review! Week of Feb 26, reviewing 27 papers
+
+The standout insight this week: we're vastly underutilizing existing models through suboptimal prompting. Four papers demonstrated massive gains (15-40% improvements) purely from reformulating tasks - no model changes required.
+
+Most surprising was how even highly instruction-tuned models remain extremely sensitive to presentation. The *PromptPatterns* study showed that adding deliberate errors for models to correct boosted reasoning accuracy by 22%, while explicit step requirements improved math performance by 37%. The data points to a significant untapped performance reserve in our current systems that better prompting can unlock.
+</example3>
+</examples>
+"""
+

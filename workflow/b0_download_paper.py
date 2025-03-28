@@ -40,10 +40,11 @@ def main():
     gist_filename = "llm_queue.txt"
     paper_list = pu.fetch_queue_gist(gist_id, gist_filename)
     x_paper_list = list(set(db_utils.get_arxiv_id_list(table_name="llm_tweets")))
-    paper_list = list(set(paper_list) - set(x_paper_list))
+    x_paper_list = [p for p in x_paper_list if pu.is_arxiv_code(p)]
     logger.info(f"Fetched {len(paper_list)} papers from gist.")
 
     ## Check local files.
+    paper_list = list(set(paper_list + x_paper_list))
     done_codes = pu.list_s3_files("arxiv-text", strip_extension=True)
     nonllm_codes = pu.list_s3_files("nonllm-arxiv-text", strip_extension=True) + ["..."]
     logger.info(

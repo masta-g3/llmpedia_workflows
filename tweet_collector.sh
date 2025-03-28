@@ -21,11 +21,11 @@ while true; do
     echo "Will sleep for ${sleep_minutes} minutes after collection..." | tee -a "$LOG_FILE"
     
     ## Run the tweet collector.
-    python "executors/collect_tweets.py" 2>&1 | tee -a "$LOG_FILE"
+    python "executors/d0_collect_tweets.py" 2>&1 | tee -a "$LOG_FILE"
     
     ## Run tweet analysis.
     echo "Running tweet analysis..." | tee -a "$LOG_FILE"
-    python "executors/t0_analyze_tweets.py" --start-time "$START_TIME" 2>&1 | tee -a "$LOG_FILE"
+    python "executors/d1_analyze_tweets.py" --start-time "$START_TIME" 2>&1 | tee -a "$LOG_FILE"
     
     echo "Tweet collection completed at $(date)" | tee -a "$LOG_FILE"
     echo "Sleeping for ${sleep_minutes} minutes..." | tee -a "$LOG_FILE"
