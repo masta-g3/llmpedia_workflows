@@ -56,8 +56,8 @@ class RDModel(str, Enum):
 def call_rd_api(
     api_token: str,
     prompt: str,
-    width: int = 128,
-    height: int = 128,
+    width: int = 256,
+    height: int = 256,
     model: RDModel = RDModel.RD_FLUX,
     steps: int = 20,
     num_images: int = 1,
