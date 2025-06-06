@@ -20,7 +20,7 @@ def main():
     engine = db_utils.get_db_engine()
     
     total_stored = 0
-    for tweet_batch in collect_llm_tweets(logger, max_tweets=1000, batch_size=10):
+    for tweet_batch in collect_llm_tweets(logger, max_tweets=2500, batch_size=10):
         if tweet_batch:
             tweet_db.store_tweets(tweet_batch, logger, engine)
             total_stored += len(tweet_batch)

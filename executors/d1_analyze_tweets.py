@@ -79,12 +79,14 @@ def process_tweets(start_time: Optional[str] = None, time_span_hours: int = 6) -
     
     # Format and analyze tweets
     tweets_text = format_tweets_for_analysis(tweets_df)
-    thinking_process, response = vs.analyze_tweet_patterns(
+    response = vs.analyze_tweet_patterns(
         tweets_text,
         previous_entries=previous_entries,
         start_date=min_date.strftime("%Y-%m-%d %H:%M:%S"),
-        end_date=max_date.strftime("%Y-%m-%d %H:%M:%S")
+        end_date=max_date.strftime("%Y-%m-%d %H:%M:%S"),
+        model="claude-3-7-sonnet-20250219"
     )
+    thinking_process = "~INTERNAL THINKING~"
     
     logger.info(f"Found {unique_count} unique tweets between {min_date} and {max_date}")
     logger.info("Completed tweet pattern analysis")
