@@ -34,7 +34,7 @@ def main():
 
         logger.info(f"Generating punchline for: {arxiv_code} - '{paper_title}'")
         punchline = vs.generate_paper_punchline(
-            paper_title, paper_notes, model="claude-3-5-sonnet-20241022"
+            paper_title, paper_notes, model="claude-3-7-sonnet-20250219"
         )
 
         data = {

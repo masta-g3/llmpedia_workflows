@@ -1,5 +1,4 @@
 import sys, os
-import pandas as pd
 from dotenv import load_dotenv
 
 PROJECT_PATH = os.getenv('PROJECT_PATH', '/app')

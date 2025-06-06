@@ -40,25 +40,11 @@ def main():
 
     for idx, arxiv_code in enumerate(arxiv_codes, 1):
         paper_title = title_map.get(arxiv_code, "Unknown Title")
-        new_content = paper_db.get_extended_notes(arxiv_code, expected_tokens=1200)
+        new_content = paper_db.get_extended_notes(arxiv_code, expected_tokens=4000)
 
         ## Try to run LLM process up to 3 times.
-        success = False
-        for i in range(RETRIES):
-            try:
-                logger.info(f"[{idx}/{total_papers}] Reviewing: {arxiv_code} - '{paper_title}' (attempt {i+1}/{RETRIES})")
-                summary = vs.review_llm_paper(new_content, model="claude-3-5-sonnet-20241022")
-                success = True
-                break
-            except Exception as e:
-                logger.error(f"[{idx}/{total_papers}] Failed review: {arxiv_code} - '{paper_title}' (attempt {i+1}/{RETRIES})")
-                logger.error(str(e))
-                continue
-        if not success:
-            logger.warning(f"[{idx}/{total_papers}] Skipping: {arxiv_code} - '{paper_title}' (failed after {RETRIES} attempts)")
-            continue
-
-        ## Extract and combine results.
+        logger.info(f"[{idx}/{total_papers}] Reviewing: {arxiv_code} - '{paper_title}'")
+        summary = vs.review_llm_paper(new_content, model="claude-3-7-sonnet-20250219")
         result_dict = summary.model_dump_json()
 
         ## Store on DB.

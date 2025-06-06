@@ -23,7 +23,7 @@ semantic_map = {
     "influentialCitationCount": "influential_citation_count",
 }
 
-OVERRIDE = True
+OVERRIDE = False
 
 def main():
     """Load summaries and add missing ones."""
@@ -32,7 +32,7 @@ def main():
     existing_codes = set(db_utils.get_arxiv_id_list("semantic_details"))
     if not OVERRIDE:
         arxiv_codes = list(set(arxiv_codes) - existing_codes)
-    arxiv_codes = sorted(arxiv_codes)[::-1][:100]
+    arxiv_codes = sorted(arxiv_codes)[::-1][:500]
 
     total_papers = len(arxiv_codes)
     logger.info(f"Found {total_papers} papers to process for citations.")

@@ -29,11 +29,11 @@ def main():
     logger.info(f"Found {total_papers} papers to process for bullet list summaries")
 
     for idx, arxiv_code in enumerate(arxiv_codes, 1):
-        paper_notes = paper_db.get_extended_notes(arxiv_code, expected_tokens=500)
+        paper_notes = paper_db.get_extended_notes(arxiv_code, expected_tokens=1200)
         paper_title = title_map[arxiv_code]
 
         bullet_list = vs.convert_notes_to_bullets(
-            paper_title, paper_notes, model="claude-3-5-sonnet-20241022"
+            paper_title, paper_notes, model="claude-3-7-sonnet-20250219"
         )
         bullet_list = bullet_list.replace("\n\n", "\n")
         

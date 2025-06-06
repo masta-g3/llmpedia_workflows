@@ -31,6 +31,7 @@ def main():
             continue
         processed_meta = pu.process_arxiv_data(arxiv_info._raw)
         df = pd.DataFrame([processed_meta])
+        df["tstp"] = pd.Timestamp.now()
         db_utils.upload_dataframe(df, "arxiv_details")
         logger.info(f"[{idx}/{total_papers}] Stored metadata: {arxiv_code} - '{processed_meta.get('title', 'Unknown Title')}'")
 

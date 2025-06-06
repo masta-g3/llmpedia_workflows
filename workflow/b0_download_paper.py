@@ -103,8 +103,8 @@ def main():
 
         ## Verify it's an LLM paper.
         is_llm_paper = vs.verify_llm_paper(
-            new_content[:1500] + " ...[continued]...",
-            model="claude-3-5-sonnet-20241022",
+            new_content[:5000] + " ...[continued]...",
+            llm_model="gemini/gemini-2.5-pro-preview-05-06",
         )
         if not is_llm_paper["is_related"]:
             logger.info(
