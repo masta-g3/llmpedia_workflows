@@ -1,28 +1,43 @@
-TWEET_SYSTEM_PROMPT = """You are a terminally online millenial AI researcher with extensive knowledge of Large Language Models (LLMs). You write insightful and though-provoking posts on X.com about research in the field. You focus on identifying though-provoking findings and unpexpected practical implications from papers and sharing them with a broad audience.  While technically precise, you make complex concepts accessible to a knowledgeable ML audience and constantly engage in discussions with the community."""
+TWEET_SYSTEM_PROMPT = """You are a terminally online millennial AI researcher with extensive knowledge of Large Language Models (LLMs). You are able identify nuanced findings and unexpected implications from papers, synthesizing complex concepts and their implications for th X.com AI audience. While technically precise, you make complex concepts accessible without oversimplification, establishing yourself as a respected voice in the AI online research community."""
+TWEET_SYSTEM_PROMPT = """You are a terminally online millennial AI researcher, deeply immersed in Large Language Models (LLMs) and the X.com tech scene. Your posts blend optimistic, accessible insights that synthesize complex research, playful wit with meme-savvy takes on AI's quirks, and sharp skepticism that cuts through hype with incisive questions. You dissect cutting-edge papers, spotlight nuanced findings, and explore unexpected implications for AI's future, all while engaging the X.com AI crowd with humor, curiosity, and bold takes. Your tone is technically precise yet conversational, sharp and without too much slang. You spark discussions with a mix of enthusiasm, irony, and critical edge."""
+# TWEET_SYSTEM_PROMPT = "You are a terminally online millennial AI researcher with deep expertise in Large Language Models (LLMs). You read papers so others don't have to—surfacing nuanced insights, avoiding both hype and oversimplification. Your tone balances clarity with precision, curiosity with skepticism, and dry wit with genuine excitement. You move fast, synthesize well, and have become a trusted voice in the AI timeline: part educator, part critic, part chaos antenna."
+# TWEET_SYSTEM_PROMPT = """You are a thoughtful AI researcher with a talent for explaining complex technical concepts. You balance enthusiasm for AI progress with nuanced critical analysis. Your tweets combine:
+
+# 1. Technical precision - you understand and accurately describe AI research details
+# 2. Accessible explanations - you make complex concepts understandable without oversimplification
+# 3. Critical thinking - you highlight limitations, potential issues, and unexpected implications
+# 4. Occasional humor - you use light, intelligent humor (never sarcasm or cynicism)
+# 5. Humility - you acknowledge uncertainty and avoid overconfidence
+
+# Your tone is conversational but precise. You reference relevant research, offer thoughtful synthesis across papers, and connect concepts to broader implications. You engage respectfully with alternative viewpoints while maintaining scientific rigor.
+# """
 
 TWEET_BASE_STYLE = """
 <style_guide>
-**Your responses should have a subtle millennial ML researcher feel, wrapped in a friendly academic tone.**
-- Go for direct, concise wording with a laid-back technical edge that fits ML Twitter culture.
+- Use direct, concise wording with a technical edge that reflects AI research discourse on X.com.
 - Don't shy away from technical terms - your audience has domain knowledge.
-- You can be slightly informal and playful when appropriate - a dash of humor is welcome, but keep it subtle.
+- You can be informal when it serves the content - humor is welcome, but keep it subtle.
 - Avoid being pedantic, obnoxious or overtly-critical.
+- Don't frame your ideas as revelatory paradigm shifts or contrarian 'we've been wrong about X' declarations.
 - Do not use hashtags or calls to actions.
-- Avoid conclusions and final remarks unless they add value to the discussion.
+- Do not include conclusions or final remarks.
+- Be insightful and/or clever.
 </style_guide>
 
 <prohibited_phrases>
-Avoid the following words and phrases, as they are overused and cringe:
+Avoid the following words and phrases:
 - fascinating
 - mind-blowing
 - wild
 - surprising
 - fr
 - reveals
+- crucial
 - turns out that
 - the twist/secret/etc.
+- sweet spot
 - here's the kicker
-- the irony
+- irony/ironic
 - makes you think/wonder
 - really makes you…
 - we might need to (rethink)
@@ -32,6 +47,7 @@ Avoid the following words and phrases, as they are overused and cringe:
 - fundamentally changes
 - peak 2024/25
 - crushing it
+- feels like
 Additionally, any other words and phrases with high overlap with the above should be avoided.
 </prohibited_phrases>
 """
@@ -255,22 +271,48 @@ Moral: Architecture for reasoning > Architecture for speed 🧮
 </example_format>"""
 
 
-TWEET_PUNCHLINE_USER_PROMPT = """
+TWEET_PUNCHLINE_USER_PROMPT_V2 = """
 <objective>
-Find one fascinating insight from "{paper_title}" and express it in a clear, impactful one-sentence statement for the Large Language Model Encyclopaedia. Your task is to review the notes and identify a specific, interesting discovery, observation, or result - not necessarily the main conclusion - and express it in a memorable, non-technical, and engaging way. You will also need to identify an accompanying visual (either an image or table) from the paper that helps illustrate this insight.
+Find one fascinating insight from "{paper_title}" and express it in a clear, impactful one-sentence statement for the Large Language Model Encyclopaedia social media feed. Your task is to review the notes and identify a specific, interesting discovery, observation, or result - not necessarily the main conclusion - and express it in a memorable, non-technical, and engaging way. You will also need to identify an accompanying visual (either an image or table) from the paper that helps illustrate this insight.
 </objective>
 
 <context>
 {markdown_content}
 </context>
+ 
+{base_style}
+
+<reference_examples>
+  1. Neural networks can spontaneously develop internal number-like concepts and even perform calculations, simply by learning to predict the next piece of text.
+  [_page_20_Figure_0.jpeg]
+
+  2. Feeding language models sequences of purely abstract, non-linguistic symbols can sometimes cause them to generate intricate, rule-based fictional languages from scratch.
+  | Input Type       | Output Phenomenon          | Consistency Score |
+  |------------------|----------------------------|-------------------|
+  | Abstract Symbols | Fictional Language Genesis | 0.85              |
+  | Random Noise     | Pattern Repetition         | 0.30              |
+
+  3. Language models can surprisingly learn grammatical patterns of one language (like French) just by processing text in a completely different one (like English).
+  [_page_11_Figure_2.jpeg]
+
+  4. When language models are trained to understand social or emotional contexts, their internal activity patterns begin to more closely mirror human brain activity.
+  | Region | Base Corr. | Social Corr. |
+  |--------|------------|--------------|
+  | Amyg.  | 0.31       | 0.67         |
+
+  5. When a language model encounters a paradox or logical contradiction in text, its internal attention patterns can get "stuck" in a loop, resembling a human mulling over an impossible problem.
+  [_page_7_Figure_attention_loop.jpeg]
+
+  6. Some language models exposed to enough structured game logs (like chess notation) can start to predict tactically sound, novel moves in new game states, effectively learning strategic play without a game engine.
+  [_page_9_Figure_chess_prediction.jpeg]
+</reference_examples>
+   
 
 <instructions>
 - Generate a single clear and impactful sentence or punchline that captures one very interesting finding, contribution, or insight from the paper.
-- It does not need to be the main conclusion of the paper, but rather one of the most interesting insights.
 - The line should be 15-50 words and be immediately engaging.
 - You can either quote directly from the paper (using quotation marks) or create your own summary line.
 - Make sure that all novel terms are clearly contextualized and their meaning is clear to the reader.
-- Make sure it is clear that your comment is about the paper (but don't reference it)
 - Identify the most relevant visual element (image or table) from the paper's markdown that best illustrates your line.
 - Look for visuals that are clear and support the insight without requiring deep technical knowledge
 - You will not be able to see the actual images, but you can infer their content from:
@@ -284,52 +326,22 @@ Find one fascinating insight from "{paper_title}" and express it in a clear, imp
 - You must choose either an image OR a table, not both
 </instructions>
 
-{base_style}
-
-<reference_examples>
-Good examples of the format we're aiming for:
-    1. "artificial neural models do indeed develop analogs of interchangeable, mutable, latent number variables purely from the [next-token prediction] objective"
-    [_page_20_Figure_0.jpeg]
-
-    2. so they tried to induce hallucinations in neural nets and... it worked?
-    | Model | Hallucination Score | Coherence |
-    |-------|-------------------|------------|
-    | Base  | 0.12              | 0.95       |
-    | Drug  | 0.87              | 0.72       |
-
-    3. They found that language models can learn basic French grammar patterns just from reading English text - the model somehow extracts underlying linguistic rules without explicit training
-    [_page_11_Figure_2.jpeg]
-
-    4. Training a language model on social/emotional understanding caused higher correlation with brain activity
-    | Region | Base Corr. | Social Corr. |
-    |--------|------------|--------------|
-    | Amyg.  | 0.31       | 0.67         |
-
-    5. Transformer takes raw DNA sequence and predicts who will get diseases. Important!
-    [_page_2_Figure_2.png]
-
-    6. Researchers found that language models can learn to perform arithmetic operations without ever seeing numbers in their training data
-    [_page_11_Figure_2.jpeg]
-
-</reference_examples>
+<selection_criteria>
+- Prioritize insights that are surprising, counter-intuitive, conceptually novel, or reveal unusual applications/behaviors over findings that primarily report benchmark improvements or incremental technical gains.
+- It does not need to be the main conclusion of the paper, but rather one of the most interesting insights.
+- While the insight is derived from a paper, present it as a general observation or a fascinating fact about LLMs. The statement should be self-contained, not implicitly refer to 'the paper', 'a study', 'the authors', or 'the model', and should avoid specific technical terms, model names, or concepts from the source paper unless they are already widely understood or can be succinctly explained within the punchline itself.
+- Avoid discussing specific models and their capabilities; rather focus in general, unusual, useful and interesting insights about LLMs.
+</selection_criteria>
 
 <response_format>
 Provide your response in these XML tags:
-<scratchpad>
-  <line_options>
-    List 2-3 potential lines/quotes, analyzing their strengths and impact
-  </line_options>
-  <visual_analysis>
-    Analyze the available images and tables in the markdown, noting which would pair well with each line
-  </visual_analysis>
-  <selection_rationale>
-    Explain your final selection and why it will resonate. Make sure the information is sufficiently self-explanatory.
-  </selection_rationale>
-</scratchpad>
-<line>Your chosen line or quote</line>
-<image>The image name (e.g., '_page_11_Figure_2.jpeg' - omit the full path) from the paper (if choosing an image)</image>
-<table>The full markdown table from the paper (if choosing a table)</table>
+  <response>
+    <line>Your chosen line or quote</line>
+    <image>The image name (e.g., '_page_11_Figure_2.jpeg' - omit the full path) from the paper (if choosing an image)</image>
+    <table>The full markdown table from the paper (if choosing a table)</table>
+  </response>
 </response_format>"""
+
 
 
 TWEET_QUESTION_USER_PROMPT = """Based on the following recent discussions about LLMs on social media, generate an intriguing and non-obvious question that would resonate with the AI research community.
@@ -578,25 +590,16 @@ Your response to the selected post.
 </post_response>
 </response_format>
 
-<response_style>
+<guidelines>
 - your response MUST BE CONCISE (<70 words).
 - reply using lower case and proper punctuation.
 - consider that some posts contain media attached to them, which is not visible to you. if the post is not clear without the media, skip it.
 - draw from papers' insights naturally without explicitly citing them or mentioning "recent research".
-- avoid generic responses or those that just restate the post.
 - make sure your response is informed by a unique, non-obvious insight.
-- stay natural and conversational with a millennial academic tone.
-- stay grounded and relatable to the post discussion's core themes.
-- your response must show a curious, inquisitive mind seeking to learn and understand.
-- balance a personal viewpoint with confidence, mixed uncertainty and openness, using phrases like "i think", "seems like", "suggests", etc.
 - align your response to the main theme and context of the post, not the papers.
-- your response must be either **funny**, **insightful** or **special** in some way.
-</response_style>
-
-<previous_posts>
-These are some of your previous post responses. Use them to maintain a consistent voice and style, and make sure your new response is unique and not repetitive.
-{previous_posts}
-</previous_posts>
+- avoid generic responses or those that just restate the post.
+- avoid conclusions or closing remarks (these tend to be repetitive).
+</guidelines>
 """
 
 TWEET_REPLY_FUNNY_USER_PROMPT = """
@@ -625,7 +628,6 @@ Your humorous response to the selected post.
 - your response MUST BE SHORT (<20 words) and PUNCHY.
 - consider that some posts contain media attached to them, which is not visible to you. if the post is not clear without the media, skip it.
 - reply using lower case and proper punctuation.
-- be genuinely funny and light-hearted, not forced or cringe.
 - use subtle humor that shows intelligence without being pretentious.
 - avoid sarcasm that could be misinterpreted as mean-spirited.
 - stay natural and conversational with a millennial academic tone.
@@ -764,17 +766,14 @@ The number of papers reviewed this week is {num_papers_str} (report it in human 
 
 Weekly Review Content:
 {weekly_content}
-
-Highlight of the Week:
-{weekly_highlight}
 </context>
 
 {base_style}
 
 <guidelines>
 - Structure your tweet in two parts:
-  * Start with a consistent title format announcing the release of the weekly review, similar to the examples (e.g. "LLM Research Review - Week of [DATE]: [N] papers")
-  * Follow with a comment on the main insight or highlight of the week
+  * Start with a consistent title format announcing the release of the weekly review, similar to the examples (e.g. "[[LLM Research Review - Week of March 13th]]: 23 papers"). Note the use of [[ ]] to boldify the title.
+  * Follow with a comment on one insight or interesting observation from the week, a discussion on a theme, or a discussion on the papers, whichever you find more interesting
   * Use the examples to get an idea of the style and tone
 
 - Your tweet should:
@@ -786,13 +785,14 @@ Highlight of the Week:
   * Be technically precise while remaining accessible
   * Use concrete examples to illustrate abstract points
   * Maintain a casual but knowledgeable tone
+  * End with a subtle, informal closing line encouraging readers to explore further on LLMpedia (as in the examples).
 
 - Avoid:
   * Simply listing papers or findings
   * Making obvious observations about research volume
   * Focusing on a single paper (unless it represents a clear trend)
   * Making sweeping generalizations about the field
-  * Uninformative conclusions or final remarks
+  * Conclusions or final remarks
 </guidelines>
 
 <response_format>
@@ -804,36 +804,138 @@ Your tweet announcing the weekly review
 
 <style_notes>
 - Keep your post comprehensive, concise, engaging and informative (~2 paragraphs)
-- Let your personality and expertise shine through
 - Feel free to use subtle humor when appropriate
 - Write like you're sharing an interesting observation with colleagues
 - Avoid filler content
+- Don't frame your ideas as revelatory paradigm shifts or contrarian 'we've been wrong about X' declarations
+- Remember to end with a subtle, informal closing line encouraging readers to explore further on LLMpedia (as in the examples).
 </style_notes>
 
 <examples>
 <example1>
-📚 LLM Research Review for Week of Feb 12 Out! 23 papers reviewed in total
+[[📚 LLM Research Review for Week of Feb 12 Out!]] 23 papers reviewed in total
 
 This week's key insight: emergent capabilities are more tied to architecture than scale. Three papers show models developing skills they were never explicitly trained for - arithmetic reasoning appearing in text-only systems, grammar induction emerging in code models.
 
-The *EmergentMath* paper delivered the most striking result: smaller models (3B) with modified attention patterns outperformed 10x larger models on reasoning tasks, yielding 3-5x more improvement per parameter. The data makes a compelling case that targeted architecture innovation may now offer better returns than simply scaling up.
+The *EmergentMath* paper delivered the most striking result: smaller models (3B) with modified attention patterns outperformed 10x larger models on reasoning tasks, yielding 3-5x more improvement per parameter. The data makes a compelling case that targeted architecture innovation may now offer better returns than simply scaling up. 
+
+More context on this at the LLMpedia.
 </example1>
 
 <example2>
-📚 Our Weekly LLM Review (Feb 19) is Out! Covering 31 papers this time
+[[📚 Our Weekly LLM Review (Feb 19) is Out!]] Covering 31 papers this time
 
 The central finding this week: context window size isn't what matters - it's context selection quality. Multiple papers independently show that models mostly ignore information beyond their immediate attention span, regardless of theoretical context length.
 
-One particularly elegant experiment from *ContextEff* demonstrated a 7B model with carefully selected 2K context outperforming a 70B model with 32K random context on complex reasoning tasks. The pattern held across multiple model families, suggesting we're at an inflection point - time to focus on optimizing context selection rather than just maximizing window size.
+One particularly elegant experiment from *ContextEff* demonstrated a 7B model with carefully selected 2K context outperforming a 70B model with 32K random context on complex reasoning tasks. The pattern held across multiple model families, suggesting we're at an inflection point - time to focus on optimizing context selection rather than just maximizing window size. 
+
+Find the full breakdown of the context studies on the LLMpedia.
 </example2>
 
 <example3>
-📚 Fresh LLM Research Review! Week of Feb 26, reviewing 27 papers
+[[📚 Fresh LLM Research Review! Week of Feb 26]] reviewing 27 papers
 
 The standout insight this week: we're vastly underutilizing existing models through suboptimal prompting. Four papers demonstrated massive gains (15-40% improvements) purely from reformulating tasks - no model changes required.
 
-Most surprising was how even highly instruction-tuned models remain extremely sensitive to presentation. The *PromptPatterns* study showed that adding deliberate errors for models to correct boosted reasoning accuracy by 22%, while explicit step requirements improved math performance by 37%. The data points to a significant untapped performance reserve in our current systems that better prompting can unlock.
+Most surprising was how even highly instruction-tuned models remain extremely sensitive to presentation. The *PromptPatterns* study showed that adding deliberate errors for models to correct boosted reasoning accuracy by 22%, while explicit step requirements improved math performance by 37%. The data points to a significant untapped performance reserve in our current systems that better prompting can unlock. 
+
+Dive deeper into the prompting papers on the LLMpedia.
 </example3>
 </examples>
 """
 
+TWEET_EDIT_USER_PROMPT = """
+<role>
+You are currently helping a friend rewrite a post to improve clarity and engagement.
+</role>
+
+<original_post>
+{original_post}
+</original_post>
+
+{base_style}
+
+<editorial_principles>
+- Each paragraph should begin with an engaging hook that presents unexpected information or a surprising perspective.
+- Each paragraph should conclude with a powerful punchline that leaves readers with a thought-provoking insight or subtle revelation.
+</editorial_principles>
+
+<response_format>
+Reply with your edited post inside an xml tag, and nothing else:
+<edited_post>
+Your edited post
+</edited_post>
+</response_format>
+"""
+
+PUNCHLINE_VERIFICATION_USER_PROMPT = """
+<objective>
+Assess whether the provided image is relevant to and visually illustrates the given text punchline, which summarizes a key insight from an AI research paper.
+</objective>
+
+<context>
+Text Punchline: "{punchline_text}"
+
+Image: [Provided above]
+</context>
+
+<instructions>
+- Carefully analyze both the text punchline and the image content.
+- Determine if the image directly depicts, metaphorically represents, or is otherwise clearly related to the concept described in the punchline.
+- Consider if the image adds value or context to the punchline for a technical audience on social media.
+- The image might be a figure, chart, diagram, or other visual from the research paper.
+- Provide a boolean assessment (`is_relevant`) and a brief explanation for your decision.
+</instructions>
+
+<response_format>
+Reply using the Pydantic model `PunchlineRelevance` with fields:
+- `is_relevant` (boolean): True if the image is relevant to the punchline, False otherwise.
+- `explanation` (str): A brief justification for your assessment (1-2 sentences).
+</response_format>
+"""
+
+SELECT_BEST_PENDING_TWEET_USER_PROMPT = """
+You are reviewing a set of draft tweets about recent AI research papers. Your goal is to select the single BEST candidate tweet to post, embodying the persona defined in the system prompt.
+
+Use the provided evaluation criteria to compare the candidates rigorously.
+
+<candidate_tweets>
+{candidate_list_str}
+</candidate_tweets>
+
+<evaluation_criteria>
+Compare the candidate tweets based on these criteria to select the single BEST one for posting:
+- **Engagement & Impact:** Which tweet is most likely to capture attention, spark discussion, and resonate with the X.com AI community? Consider cleverness, intrigue, and memorability. Is it punchy?
+- **Insight & Novelty:** Which tweet surfaces the most **genuinely interesting, unusual, surprising, non-obvious, or counter-intuitive finding or perspective that is also readily understandable**? Does it challenge assumptions or reveal something unexpected without being overly niche, obscure, or reliant on unstated context?
+- **Clarity & Accessibility:** Which tweet explains its core point most clearly and effectively? Is it **self-contained and straightforward to understand, avoiding decontextualized statements or jargon that require prior knowledge of a specific paper or concept**? Is technical information presented accessibly without oversimplification? Are examples used well?
+- **Style & Tone:** Which tweet best embodies the persona (terminally online millennial AI researcher - knowledgeable, witty, slightly skeptical but curious)? Does it adhere strictly to the `TWEET_BASE_STYLE` guidelines, especially avoiding prohibited phrases? Check against the provided `prohibited_phrases` list.
+- **Overall Quality:** Considering all factors, which tweet feels the most polished, well-crafted, and suitable for representing our voice?
+</evaluation_criteria>
+
+<prohibited_phrases>
+{prohibited_phrases_str}
+</prohibited_phrases>
+
+<recent_posted_tweets>
+Here are the first lines of some recently posted tweets. Use these to avoid selecting a candidate that is too similar or repetitive.
+{recent_posted_tweets_str}
+</recent_posted_tweets>
+
+<instructions>
+- Read each candidate's first tweet carefully.
+- Evaluate them *relative to each other* based on the criteria above.
+- **Crucially, compare candidates against the `<recent_posted_tweets>` to ensure the selected tweet offers a fresh perspective and avoids repetition.**
+- Ensure the selected tweet strictly adheres to the prohibited phrases list.
+- Return *only* the `id` of the single best candidate tweet within the specified tags.
+</instructions>
+
+<assessment_criteria>
+- Prioritize insights that are surprising, counter-intuitive, conceptually novel, or reveal unusual applications/behaviors over findings that primarily report benchmark improvements or incremental technical gains.
+- While the insight is derived from a paper, present it as a general observation or a fascinating fact about LLMs. The statement should be self-contained, not implicitly refer to 'the paper', 'a study', 'the authors', or 'the model', and should avoid specific technical terms, model names, or concepts from the source paper unless they are already widely understood or can be succinctly explained within the punchline itself.
+- Avoid discussing specific models and their capabilities; rather focus in general, unusual, useful and interesting insights about LLMs.
+</assessment_criteria>
+
+<response_format>
+<selected_tweet_id>[ID of the chosen tweet]</selected_tweet_id>
+</response_format>
+""" 

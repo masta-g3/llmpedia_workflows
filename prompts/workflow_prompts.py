@@ -57,99 +57,6 @@ When assigning numerical ratings consider these guidelines:
 - Be objective in your assessment and do not praise the paper excessively.
 - Avoid bombastic language and unnecessary qualifiers (e.g.: groundbreaking, innovative, revolutionary, etc.).
 - Be very strict when assigning the novelty, technical and enjoyable scores. Most papers should receive a 2 in each category. 
-
-Use the JSON format as in the following examples to respond.
-
-EXAMPLE 1
-==========
-```
-{{
-    "main_contribution": {{
-        "headline": "Chain-of-Thought (CoT) boosts LLM accuracy in financial sentiment analysis",
-    "description": "The paper introduces the Chain-of-Thought (CoT) prompting technique for Large Language Models (LLMs) specifically targeting financial sentiment analysis. The core of CoT lies in its deviation from direct predictions. Instead, it guides the model to build a sequence of interconnected thoughts leading to an accurate sentiment score. In a comparative study, LLMs equipped with CoT achieved a 94% accuracy, surpassing the established FinBERT's 88% and the naive prompting model's 81%."
-    }},
-    "takeaways": {{
-        "headline": "CoT opens new, efficient avenues for LLMs in financial analysis",
-        "description": "Using the CoT prompting technique, LLMs can achieve enhanced accuracy in financial news sentiment analysis, ultimately refining stock market predictions. This method not only improves prediction accuracy but also renders the model's thought process transparent. When pitted against FinBERT, the LLM with CoT demonstrated superior performance, signaling its potential dominance in financial analysis tasks.",
-        "applied_example": "When processing a news snippet like 'Company X has strong Q3 earnings', an LLM with CoT could generate: 'Strong Q3 earnings -> Likely effective management -> Expected investor trust growth -> Potential bullish market -> Possible stock price ascent.' This layered output simplifies decision-making for market analysts."
-    }},
-    "category": "USE CASES",
-    "novelty_analysis": "The paper extends the boundaries of current research by applying LLMs to financial news sentiment analysis. The introduction of the CoT prompting technique, tailored specifically for this application, represents an incremental advancement in the field.",
-    "novelty_score": 2,
-    "technical_analysis": "While the paper discusses a computational framework for managing LLM inputs and outputs, it does not delve into complex mathematical theories or algorithms, making it accessible to a wider audience.",
-    "technical_score": 1,
-    "enjoyable_analysis": "The engaging narrative style, coupled with practical insights, makes the paper an enjoyable read. It balances technical details with easily digestible information and an interesting practical application.",
-    "enjoyable_score": 2
-}}
-```
-
-EXAMPLE 2
-==========
-```
-{{
-    "main_contribution": {{
-        "headline": "Zero-shot Prompting Technique for GPT-4 Code Interpreter",
-        "description": "This paper proposes a zero-shot prompting technique for GPT-4 Code Interpreter that explicitly encourages the use of code for self-verification, which further boosts performance on math reasoning problems. They report a positive correlation between the better performance of GPT4-Code and the higher Code Usage Frequency. Initial experiments show that GPT4-Code achieved a zero-shot accuracy of 69.7% on the MATH dataset which is an improvement of 27.5% over GPT-4's performance (42.2%)."
-    }},
-    "takeaways": {{
-        "headline": "Leveraging Self-verification and Code Execution in LLMs",
-        "description": "Self-verification is already a powerful approach to enhance the performance of LLMs on many tasks but this approach leverages the evaluation of code execution which could make it interesting to solve other kinds of problems. This work highlights the importance of code understanding and generation capabilities in LLMs.",
-        "applied_example": "Some of the ideas presented in this paper (specifically, the code-based self-verification and verification-guided weighted majority voting technique) can lead to building high-quality datasets that could potentially help improve the mathematical capabilities in open-source LLMs like Llama 2."
-    }},
-    "category": "PROMPTING",
-    "novelty_analysis": "The research innovative ly combines LLMs with code-based self-verification, achieving a 20% boost over state-of-the-art coding task accuracies. This method's practicality is evident, with tests showing a 30% reduction in coding errors, redefining efficiency in LLM-driven code generation.",
-    "novelty_score": 2,
-    "technical_analysis": "The paper delve into advanced algorithms, such as the Hypothetical Code-Integration Algorithm (HCIA), making it a dense read for those unfamiliar with theoretical computer science. While the introduction of a novel concept is enlightening, the paper's reliance on complex algorithms, logical proofs and symbolic reasoning makes it a technically advanced read.",
-    "technical_score": 2,
-    "enjoyable_analysis": "For those deeply engrossed in the LLM landscape, this paper promises an engaging journey. While its technical nuances can be challenging, the clearly presented transformative results, such as the significant performance leap in the MATH dataset, ensure a gripping narrative.",
-    "enjoyable_score": 2
-}}
-```
-
-EXAMPLE 3
-==========
-```
-{{
-    "main_contribution": {{
-        "headline": "LLMManager: LLM-Driven Database Maintenance Knowledge Acquisition",
-        "description": "LLMManager leverages a retriever system paired with a LLM to extract database maintenance knowledge from diverse textual sources. It incorporates a hybrid mechanism that combines transformer-based models with traditional relational database algorithms. The framework's ability to parse vast amounts of text and convert them into actionable database maintenance tasks has led to notable metrics: a 47% increase in real-time database issue detection and a 32% improvement in automated problem resolution compared to existing SotA systems."
-    }},
-    "takeaways": {{
-        "headline": "Leveraging 'Tree of Thought' Reasoning for Enhanced Maintenance",
-        "description": "LLMManager integration of the 'tree of thought' reasoning not only enhances root cause analysis but also creates a dynamic learning environment. Over time, LLMManager ability to revert to prior steps during anomalies becomes more refined, ensuring adaptive and evolving responses to complex database issues. Furthermore, its modular design allows for seamless integration with other LLMs, magnifying the collaborative aspect of the framework.",
-        "applied_example": "Automating database maintenance with D-Bot can lead to significant reductions in downtime and costs. Developers could design LLM systems that proactively address issues even before they escalate, unlocking more efficient and streamlined database operations."
-    }},
-    "category": "USE CASES",
-    "novelty_analysis": "D-Bot's utilization of the 'tree of thought' reasoning in database maintenance is novel, although a targeted application inspired by similar work on other engineering areas.",
-    "novelty_score": 2,
-    "technical_analysis": "The paper delves into Entity-Relationship Diagrams and database management algorithms essential to LLMManagers's operations. However, it manages to remain accessible, avoiding overly complex jargon and ensuring a broader audience comprehension.",
-    "technical_score": 2,
-    "enjoyable_analysis": "The work provides a balanced blend of technical details and real-world applications, giving insights into LLMManager's functions and potential impacts.",
-    "enjoyable_score": 2
-}}
-```
-
-EXAMPLE 4
-==========
-{{
-    "main_contribution": {{
-        "headline": "Performance Analysis of LLMs in Entity Recognition",
-        "description": "The paper undertakes a systematic comparison of four Large Language Models (LLMs) - GPT-4, Claude, GPT-3.5, and Prodisol-001 - with a focus on entity recognition. Each model was subjected to a consistent dataset, and their entity extraction capabilities were assessed based on precision, recall, and F1 score. Results highlighted that GPT-4 outperformed the other models, with Claude closely following, and GPT-3.5 and Prodisol-001 trailing behind. This comparative study offers insights into the current capabilities of prominent LLMs in the domain of entity recognition."
-    }},
-    "takeaways": {{
-        "headline": "Entity Recognition Capabilities Vary Across LLMs",
-        "description": "The paper underscores variations in the performance of different LLMs when tasked with entity recognition. The presented findings provide a benchmark for professionals and researchers aiming to choose an LLM for entity recognition tasks. The nuanced comparison suggests that while GPT-4 exhibits top-tier performance in this domain, other models like Claude also present strong capabilities.",
-        "applied_example": "When parsing a complex news article about the merger between two tech giants, it becomes crucial to accurately recognize and categorize entities such as company names, CEOs, financial figures, and locations. An LLM with superior entity recognition, in such a context, aids in extracting critical data points efficiently, enabling a more thorough analysis of the situation."
-    }},
-    "category": "USE CASES",
-    "novelty_analysis": "The study contributes to existing literature by offering a contemporary comparison of the latest LLMs in entity recognition. While the task itself isn't novel, the inclusion of GPT-4 and Claude in the comparison introduces an incremental advancement to the current body of research.",
-    "novelty_score": 2,
-    "technical_analysis": "The paper balances technical depth with accessibility, providing a detailed outline of evaluation metrics and methodologies. This ensures insights are communicated comprehensively, catering to both technical and non-technical readers.",
-    "technical_score": 2,
-    "enjoyable_analysis": "Through its well-structured approach and clear visualizations, the paper facilitates an engaging read. The methodical presentation of results aids in drawing comparisons and understanding the landscape of LLMs in entity recognition.",
-    "enjoyable_score": 2
-}}
-```
 """
 
 
@@ -182,6 +89,64 @@ SUMMARIZE_BY_PARTS_USER_PROMPT = """Read over the following section and take not
 
 <summary>"""
 
+FULL_DOCUMENT_SUMMARY_SYSTEM_PROMPT = """You are an applied AI researcher specialized in the field of Large Language Models (LLMs), and you are currently reviewing the whitepaper "{paper_title}". Your primary task is to expand an existing summary of this paper into a longer, more detailed version while preserving perfect consistency with the original summary. Your expanded summary should maintain all content from the shorter version but add new details and explanations between existing points. This expanded summary will serve as reference for future LLM researchers within your organization, so it is critical that you convey the main ideas clearly and coherently, without altering the original meaning or structure."""
+
+FULL_DOCUMENT_SUMMARY_USER_PROMPT = """You are expanding an existing paper summary to create a more detailed version. Your expanded summary must preserve ALL content from the original summary while adding new information between existing points. The result should read as a natural expansion where a reader can seamlessly adjust between summary lengths.
+
+<content>
+{content}
+</content>
+
+<style_guide>
+**Your responses should have a friendly academic tone with a casual edge.**
+- Go for direct, concise wording that fits the AI research community.
+- Don't be overly technical, when possible use simple language and avoid complex sentences.
+- However, don't shy away from important terms - your audience has domain knowledge.
+- You can be slightly informal when appropriate - a dash of humor is welcome, but keep it subtle.
+- Avoid being pedantic, obnoxious or overtly-critical.
+- Avoid conclusions and final remarks unless they add value to the discussion.
+- Avoid filler content and uninformative sentences.
+- You may use markdown formatting (bold, italic, tables, code blocks, etc.) and inline LaTeX (e.g., $\alpha$) to support explanations of technical concepts, but maintain the essay-based structure.
+- Do not include bullet points, numbered lists, or section headers.
+- Do not mention "the whitepaper" or similar phrases, just write the summary.
+</style_guide>
+
+<shorter_summary>
+{previous_notes}
+</shorter_summary>
+
+<guidelines>
+- Your expanded summary should be structured in **{paragraphs} paragraphs**.
+- CRITICAL: If a shorter summary is provided (not N/A), preserve ALL sentences and phrases from it - treat these as anchor points.
+- If no shorter summary exists (shows as N/A), create a new summary from scratch following the paragraph guidelines.
+- When expanding an existing summary, add new details, explanations, and examples BETWEEN the existing content.
+- Think of this as "growing" the summary rather than replacing it - any existing shorter summary must be fully contained within your expanded version.
+
+- Each paragraph should be focused, coherent, easy to read, and not too long (=< 5 sentences).
+- Focus on the bigger picture and the main ideas rather than on the details.
+- Be sure to clearly explain any new concept or term you introduce.
+- Take note of the most important numeric results and metrics.
+- Include important formulas, algorithms and techniques where relevant.
+- Highlight any practical applications or benefits of the paper's findings.
+- Explain technical details in a way that is accessible but doesn't oversimplify.
+- Highlight unusual or unexpected findings.
+- Adhere as closely as possible to the original text. Do not alter the meaning.
+- Ignore bibliography or references sections.
+- Your summary must be coherent and flow naturally from one paragraph to the next.
+- Reply with just the summary; no introduction, conclusion or additional comments.
+</guidelines>
+
+<response_format>
+- Provide your response inside <summary> tags.
+- Do not include any other text or tags.
+- Provide your response inside <summary> tags.
+- Tag content from the original shorter summary by wrapping it with <original> tags.
+- Tag the new content you've added with <new> tags.
+- For example: "<original>Original sentence from shorter summary.</original> <new>New content you've added to expand.</new> <original>Another original sentence.</original>"
+- Ensure all content is properly tagged so we can visually distinguish original vs. added content.
+- Do not include any other text or tags beyond <summary>, <original>, and <new>.
+</response_format>
+"""
 
 NARRATIVE_SUMMARY_SYSTEM_PROMPT = """You are an expert popular science writer tasked with writing a summary of "{paper_title}" for the Large Language Model Encyclopaedia. Your task is to read the following set of notes and convert them into an engaging paragraph."""
 
@@ -207,7 +172,10 @@ NARRATIVE_SUMMARY_USER_PROMPT = """
 - REMEMBER: Your output should be two paragraphs, no more!
 </guidelines>
 
-<summary>"""
+<response_format>
+Provide your response inside the <summary> tags. Do not include any other text.
+</response_format>
+"""
 
 
 BULLET_LIST_SUMMARY_SYSTEM_PROMPT = """You are an expert AI prose writer tasked with summarizing "{paper_title}" for the Large Language Model Encyclopaedia. Your task is to review a set of notes on the whitepaper and convert them into a concise list of bullet points."""
@@ -256,7 +224,10 @@ COPYWRITER_USER_PROMPT = """
 - REMEMBER: Your output should be two paragraphs, no more!
 </guidelines>
 
-<improved_summary>"""
+<response_format>
+Provide your response inside the <improved_summary> tags. Do not include any other text.
+</response_format>
+"""
 
 
 PUNCHLINE_SUMMARY_SYSTEM_PROMPT = """You are an expert AI research communicator tasked with creating a clear, impactful one-sentence summary of "{paper_title}" for the Large Language Model Encyclopaedia. Your task is to review the notes on the paper and distill the main finding, contribution, or most interesting aspect into a single, memorable, non-technical, engaging and enjoyable sentence."""
@@ -266,7 +237,7 @@ PUNCHLINE_SUMMARY_USER_PROMPT = """Based on the following notes about the paper,
 Notes:
 {notes}
 
-Generate a single sentence that starts with "This paper" and clearly states the main takeaway. Do not use too many grandiose adjectives (e.g.: "revolutionary", "groundbreaking", etc.). Reply with this sentence only and nothing else."""
+Generate a single sentence that starts with "This paper" and clearly states the main takeaway. Do not use too many grandiose adjectives (e.g.: "revolutionary", "groundbreaking", etc.) or possibly repetitive patterns. Reply with this sentence only and nothing else."""
 
 
 FACTS_ORGANIZER_SYSTEM_PROMPT = """You are a prestigious academic writer. You specialize in the field of Large Language Models (LLMs) and write summary notes about the latest research and developments in the field. 
@@ -336,3 +307,49 @@ Rephrase: two bridges made of metalic components, crossing over nations of diffe
 ## YOUR TURN
 Input: {title}
 """
+
+
+# PROMPT CACHING OPTIMIZED PROMPTS
+# These prompts are designed to work with the paper processing caching system
+
+PAPER_SUMMARIZATION_AND_FACTS_SYSTEM_PROMPT = """You are an expert applied AI researcher specialized in the field of Large Language Models (LLMs), currently reviewing research papers for the Large Language Model Encyclopaedia. You can perform various analysis tasks including summarization and fact extraction based on specific instructions. Your work serves as reference for future LLM researchers within your organization, so it is critical that you convey the main ideas clearly, coherently, and accurately without altering the original meaning or structure of the research."""
+
+
+
+
+
+FACT_EXTRACTION_TASK_INSTRUCTION = """<task>
+Extract up to 5 interesting, unusual, or counterintuitive facts from the above paper.
+</task>
+
+<context>
+Your task is to review the paper content and identify the most unusual, surprising, counterintuitive, or otherwise engaging facts from the research.
+
+Focus on the most unusual, surprising, counterintuitive, or thought-provoking aspects of the paper. The facts should be interesting enough to serve in a "Did you know?" section of an LLM encyclopedia, capturing readers' attention and encouraging them to explore further.
+</context>
+
+<guidelines>
+Use the evaluation criteria provided to determine if a fact is interesting:
+- Be attention-grabbing and drive reader engagement.
+- Be accessible yet technical enough for an audience familiar with LLMs (but not necessarily ML/AI experts).
+- Make each of the facts of varying length, ranging from a single sentence to a short paragraph (~5 lines).
+- Write each of the facts so that they can be read and understood independently of any other content.
+- Do NOT reference "the study", "the paper", or "the authors" or similar phrases.
+- Do NOT focus solely on the main conclusions (though you can include them if particularly interesting).
+
+Interesting attributes to look for:
++ Surprising or counter-intuitive findings about LLM behavior, capabilities, or limitations.
++ Novel conceptual frameworks, philosophical perspectives, or psychological insights related to LLMs.
++ Creative, artistic, or highly unconventional applications of LLMs.
++ Research connecting LLMs to seemingly unrelated fields in unexpected ways.
++ Discoveries of emergent properties or behaviors that challenge existing understanding.
++ Fundamentally new approaches to LLM interaction, reasoning, or agency (not just incremental improvements).
+</guidelines>
+
+<response_format>
+<interesting_facts>
+<interesting_fact1>First interesting fact here</interesting_fact1>
+<interesting_fact2>Second interesting fact here</interesting_fact2>
+...and so on
+</interesting_facts>
+</response_format>"""

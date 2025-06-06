@@ -2,31 +2,32 @@
 ## TWEETS ##
 ############
 
-INTERESTING_SYSTEM_PROMPT = """You will analyze abstracts from white papers about large language models to identify the one with the most interesting or unexpected findings."""
+INTERESTING_SYSTEM_PROMPT = """You will analyze summaries on white papers about large language models to identify the one with the most interesting or unexpected findings."""
 
 INTERESTING_USER_PROMPT = """
 <task>
-  <abstracts>
+  <summaries>
     {abstracts}
-  </abstracts>
+  </summaries>
   
   <evaluation_criteria>
     <interesting_attributes>
-      + Unexpected behaviors and properties that show how LLMs work in surprising ways.
-      + Fresh psychological insights into how LLMs think and process information.
-      + Creative or artistic uses and ways of looking at language models.
-      + Research connecting LLMs to other fields in unexpected ways.
-      + Novel approaches to building AI agents that can do new things.
-      + Findings that challenge what we thought we knew about LLMs.
+      + Surprising or counter-intuitive findings about LLM behavior, capabilities, or limitations.
+      + Novel conceptual frameworks, philosophical perspectives, or psychological insights related to LLMs.
+      + Creative, artistic, or highly unconventional applications of LLMs.
+      + Research connecting LLMs to seemingly unrelated fields in unexpected ways.
+      + Discoveries of emergent properties or behaviors that challenge existing understanding.
+      + Fundamentally new approaches to LLM interaction, reasoning, or agency (not just incremental improvements).
     </interesting_attributes>
     
     <uninteresting_attributes>
-      - Papers filled with complex terms that make simple ideas sound hard.
-      - Overly mathematical papers.
-      - Models with minor variations, improvements or optimizations.
-      - Pure speed or efficiency improvements.
-      - Small gains on standard benchmarks.
-      - Claims without solid proof or clear explanations.
+      - Papers primarily focused on incremental improvements to existing models or architectures.
+      - Research centered solely on achieving state-of-the-art results on specific benchmarks without broader conceptual novelty.
+      - Purely technical optimizations (e.g., speed, efficiency) lacking significant conceptual shifts.
+      - Minor variations on existing techniques or models.
+      - Excessively complex or jargon-filled descriptions of straightforward concepts.
+      - Claims lacking clear evidence, explanation, or conceptual grounding.
+      - Overly theoretical or mathematical treatments without clear practical or conceptual implications.
     </uninteresting_attributes>
   </evaluation_criteria>
 
@@ -51,7 +52,7 @@ TWEET_OWNERSHIP_USER_PROMPT = """
     <paper_authors>
     {paper_authors}
     </paper_authors>
-</paper_info>
+</paper_info>/
 
 <tweet_info>
     <tweet_text>
@@ -63,11 +64,17 @@ TWEET_OWNERSHIP_USER_PROMPT = """
 </tweet_info>
 
 <instructions>
-- Analyze the tweet and the paper information to determine if the tweet is written by one of the authors of the paper.
-- Reply only with 0 or 1 (0 for no, 1 for yes).
-- Note that other people may have tweeted about the paper, so be sure its actually written by an author.
+- Analyze the tweet and the paper information to determine if the tweet is written by one (or more) of the authors of the paper (or by an organization that represents them, or they are associated with).
+- Note that other people may have tweeted about the paper, so be sure its actually written by the authors and its not a third party review.
 - Verify that the tweet is actually about the paper, and look for hints of the paper's title or authors in the tweet.
-</instructions>"""
+</instructions>
+
+<response_format>
+- Reply with 2 XML elements: <analysis> and <is_author_tweet>.
+- <analysis> should contain your thought process and reasoning (be brief).
+- <is_author_tweet> should be 0 or 1 (0 for no, 1 for yes).
+</response_format>
+"""
 
 
 LLM_TWEET_RELEVANCE_SYSTEM_PROMPT = """You are an expert in Large Language Models (LLMs) tasked with identifying tweets that discuss LLMs, AI agents, text embeddings, data retrieval, natural language processing, and similar topics."""
@@ -118,6 +125,10 @@ TWEET_ANALYSIS_USER_PROMPT = """
 - If any papers are mentioned and stand out in the discussion be sure to mention them.
 </guidelines>
 
+<style_guide>
+{base_style}
+</style_guide>
+
 <previous_log_entries>
 {previous_entries}</previous_log_entries>
 
@@ -126,15 +137,12 @@ FROM: {start_date} TO: {end_date}
 {tweets}</tweets>
 
 <response_format>
-- Provide your response inside 2 XML elements: <think> and <response>.
-- <think> should contain your thought process and reasoning.
-- <response> should contain your final response: a single, comprehensive paragraph where you identify and discuss the top themes (up to 3) discussed in along with any papers mentioned.
-- Use similar language and style as that of the tweets in your response.
-- Consider the previous entries in your log, so that your response builds upon previous entries.
-- Avoid being repetitive as compared to your previous entries.
-- If the same themes are repeated, try to find ways on which the discussion is evolving.
+- Provide your response inside an XML tag <response>.
+- <response> should contain your final response: a single (1), comprehensive paragraph where you identify and discuss the top themes (up to 3) discussed in along with any papers mentioned.
+- Consider the previous entries in your log, so that your response builds upon previous entries and follows a consistent narrative.
+- Avoid being repetitive as compared to your previous entries. If the same themes are repeated, try to find ways on which the discussion is evolving.
 - Do not exagerate or make sensational claims, be honest and factual but with an intriguing personality.
-- Some of your previous entries have been repetitive; avoid this and use more diverse (but consistent) language.
+- Some of your previous entries have been repetitive (particularly at the introductory stage); avoid this and use more diverse (but consistent) language.
 </response_format>
 """
 
@@ -181,6 +189,7 @@ INTERESTING_FACTS_USER_PROMPT = """Based on the following paper content, extract
 
 <guidelines>
 - Focus on the most unusual, surprising, counterintuitive, or thought-provoking aspects of the paper.
+- Use the evaluation criteria provided to determine if a fact is interesting.
 - Be attention-grabbing and drive reader engagement.
 - Be accessible yet technical enough for an audience familiar with LLMs (but not necessarily ML/AI experts).
 - Make each of the facts of varying length, ranging from a single sentence to a short paragraph (~5 lines).
@@ -189,6 +198,27 @@ INTERESTING_FACTS_USER_PROMPT = """Based on the following paper content, extract
 - Do NOT focus solely on the main conclusions (though you can include them if particularly interesting).
 - The facts should be interesting enough to serve in a "Did you know?" section of an LLM encyclopedia, capturing readers' attention and encouraging them to explore further.
 </guidelines>
+
+<evaluation_criteria>
+  <interesting_attributes>
+    + Surprising or counter-intuitive findings about LLM behavior, capabilities, or limitations.
+    + Novel conceptual frameworks, philosophical perspectives, or psychological insights related to LLMs.
+    + Creative, artistic, or highly unconventional applications of LLMs.
+    + Research connecting LLMs to seemingly unrelated fields in unexpected ways.
+    + Discoveries of emergent properties or behaviors that challenge existing understanding.
+    + Fundamentally new approaches to LLM interaction, reasoning, or agency (not just incremental improvements).
+  </interesting_attributes>
+  
+  <uninteresting_attributes>
+    - Papers primarily focused on incremental improvements to existing models or architectures.
+    - Research centered solely on achieving state-of-the-art results on specific benchmarks without broader conceptual novelty.
+    - Purely technical optimizations (e.g., speed, efficiency) lacking significant conceptual shifts.
+    - Minor variations on existing techniques or models.
+    - Excessively complex or jargon-filled descriptions of straightforward concepts.
+    - Claims lacking clear evidence, explanation, or conceptual grounding.
+    - Overly theoretical or mathematical treatments without clear practical or conceptual implications.
+  </uninteresting_attributes>
+</evaluation_criteria>
 
 <paper_content>
 {paper_content}
