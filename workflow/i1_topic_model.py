@@ -90,8 +90,8 @@ def create_topic_model(prompt: str) -> BERTopic:
     #     nr_docs=30,
     # )
     llm_model = LiteLLM(
-        # model="claude-3-7-sonnet-20250219",
-        model="gemini/gemini-2.0-flash",
+        model="claude-3-7-sonnet-20250219",
+        # model="gemini/gemini-2.0-flash",
         prompt=prompt,
         nr_docs=100,
     )
@@ -118,7 +118,7 @@ def extract_topics_and_embeddings(
         topics, _ = topic_model.fit_transform(all_content, embeddings)
         reduced_embeddings = reduced_model.fit_transform(embeddings)
         reduced_topics = topic_model.reduce_outliers(all_content, topics, strategy="c-tf-idf", threshold=0.1)
-        reduced_topics2 = topic_model.reduce_outliers(all_content, reduced_topics, strategy="distributions")
+        reduced_topics2 = topic_model.reduce_outliers(all_content, reduced_topics, strategy="distributions", threshold=0.25)
         topic_model.update_topics(
             docs=all_content, 
             topics=reduced_topics2, 
@@ -132,7 +132,10 @@ def extract_topics_and_embeddings(
         if n_outliers > 0:
             topic_model.topic_sizes_[-1] += n_outliers
             reduced_topics = topic_model.reduce_outliers(all_content, topics, strategy="c-tf-idf", threshold=0.1)
-            reduced_topics2 = topic_model.reduce_outliers(all_content, reduced_topics, strategy="distributions")
+            if -1 in reduced_topics:
+                reduced_topics2 = topic_model.reduce_outliers(all_content, reduced_topics, strategy="distributions", threshold=0.1)
+            else:
+                reduced_topics2 = reduced_topics
         else:
             reduced_topics2 = topics
 
@@ -170,7 +173,7 @@ def store_topics_and_embeddings(
         )
 
     topic_names = topic_model.get_topic_info().set_index("Topic")["Name"]
-    topic_names[-1] = "Miscellaneous"
+    topic_names[-1] = "-1_Miscellaneous"
     clean_topic_names = [
         topic_names[t].split("_")[-1].replace('"', "").strip() for t in topics
     ]
