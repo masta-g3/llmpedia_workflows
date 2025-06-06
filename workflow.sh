@@ -93,10 +93,12 @@ while true; do
     run_step "1: Document Fetcher" "workflow/b0_download_paper.py"
     run_step "2: Marker Fetcher" "workflow/b1_download_paper_marker.py"
     run_step "2: Meta-Data Collect" "workflow/c0_fetch_meta.py"
-    run_step "3: Summarizer" "workflow/d0_summarize.py"
+    # run_step "3: Summarizer" "workflow/d0_summarize.py"
+    run_step "3: Full Document Processor" "workflow/d2_summarize_full.py"
     run_step "4: Narrator" "workflow/e0_narrate.py"
     run_step "4.1: Bullet List" "workflow/e1_narrate_bullet.py"
     run_step "4.2: Punchline" "workflow/e2_narrate_punchline.py"
+    # run_step "4.3: Interesting Facts" "workflow/e3_extract_interesting_facts.py"
     # run_step "4.2: Data Card" "workflow/e2_data_card.py" # BY DEMAND
     run_step "5: Reviewer" "workflow/f0_review.py"
     run_step "6: Visual Artist" "workflow/g0_create_thumbnail.py"
@@ -111,12 +113,16 @@ while true; do
     run_step "12: Page Extractor" "workflow/m0_page_extractor.py"
     run_step "13:  Repo Extractor" "workflow/n0_repo_extractor.py"
     run_step "14: GIST Updater" "workflow/z0_update_gist.py"
-    run_step "15: Generate tweet" "workflow/z2_generate_tweet.py"
+    run_step "15.1: Generate tweet" "workflow/z2_generate_tweet.py"
+    run_step "15.2: Generate tweet" "workflow/z2_generate_tweet.py"
+    run_step "15.3: Generate tweet" "workflow/z2_generate_tweet.py"
+    run_step "15.4: Generate tweet" "workflow/z2_generate_tweet.py"
     run_step "16: Tweet Replier" "workflow/z3_schedule_reply.py"
+    run_step "17: Select and Post Tweet" "workflow/z4_select_and_post_tweet.py"
 
     echo "Cycle completed at $(date)" | tee -a "$LOG_FILE"
     echo "Starting next cycle..."
 
-    sleep_minutes=$(( (RANDOM % 151) + 90 ))
+    sleep_minutes=$(( (RANDOM % 91) + 90 ))
     sleep_with_progress $sleep_minutes
 done
