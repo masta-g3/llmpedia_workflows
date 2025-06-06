@@ -5,7 +5,7 @@ set -a
 source .venv/bin/activate
 set +a
 
-PROJECT_PATH=${PROJECT_PATH:-.}
+export PROJECT_PATH=${PROJECT_PATH:-$(pwd)}
 
 function show_progress() {
     local elapsed=$1
@@ -59,20 +59,17 @@ function run_daily_update() {
     if [ $exit_status -eq 2 ]; then
         ## If there are too few papers, log it as info and continue.
         echo ">> [Daily Update] Skipped - Too few papers (less than 4) in the last 24 hours" | tee -a "$LOG_FILE"
-        python -c "from utils.db.logging_db import log_workflow_run; log_workflow_run('Daily Update', 'executors/a1_daily_update.py', 'skipped', 'Too few papers')"
         rm -f "$temp_error_file"
         return 0
     elif [ $exit_status -ne 0 ]; then
         ## If the script failed, log the error.
         local error_msg=$(cat "$temp_error_file")
-        python -c "from utils.db.logging_db import log_workflow_run; log_workflow_run('Daily Update', 'executors/a1_daily_update.py', 'error', '''$error_msg''')"
         rm -f "$temp_error_file"
-        echo ">> [Daily Update] Failed at $(date)" | tee -a "$LOG_FILE"
+        echo ">> [Daily Update] Failed at $(date) with error: $error_msg" | tee -a "$LOG_FILE"
         return 1
     fi
     
     ## Log successful run.
-    python -c "from utils.db.logging_db import log_workflow_run; log_workflow_run('Daily Update', 'executors/a1_daily_update.py', 'success')"
     rm -f "$temp_error_file"
     echo ">> [Daily Update] Completed at $(date)" | tee -a "$LOG_FILE"
     return 0
