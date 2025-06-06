@@ -636,6 +636,7 @@ def update_gist(
     gist_content: str,
 ):
     """Upload a text file as a GitHub gist."""
+    
     if len(gist_content) == 0:
         gist_content = "..."
     headers = {
@@ -651,6 +652,29 @@ def update_gist(
         headers=headers,
         data=json.dumps(params),
     )
+
+    # Handle rate limit errors (status codes 403 or 429)
+    if response.status_code in (403, 429):
+        reset_time = int(response.headers.get("x-ratelimit-reset", 0))
+        retry_after = int(response.headers.get("retry-after", 60))
+        
+        # Use retry-after header or calculate wait time from reset_time
+        if retry_after > 0:
+            wait_time = retry_after
+        elif reset_time > 0:
+            wait_time = max(reset_time - time.time(), 0) + 1
+        else:
+            wait_time = 60  # Default wait of 60 seconds
+            
+        print(f"GitHub API rate limit hit. Waiting for {wait_time:.1f} seconds before retry.")
+        time.sleep(wait_time)
+        
+        # Retry once after waiting
+        response = requests.patch(
+            f"https://api.github.com/gists/{gist_id}",
+            headers=headers,
+            data=json.dumps(params),
+        )
 
     if response.status_code == 200:
         # print(f"Gist {gist_filename} updated successfully.")
