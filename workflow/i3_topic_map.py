@@ -67,7 +67,7 @@ def create_topic_map(topics_df: pd.DataFrame, citations_df: pd.DataFrame, arxiv_
     <div style="max-width: 500px; font-family: system-ui, -apple-system, sans-serif;">
         <div style="font-size: 14px; font-weight: bold; padding: 4px; color: #2a2a2a;">
             {hover_text}
-            <a href="http://llmpedia.streamlit.app/?arxiv_code={arxiv_id}" target="_blank" style="text-decoration: none; margin-left: 6px; color: #666;">🔗</a>
+            <a href="https://llmpedia.ai/?arxiv_code={arxiv_id}" target="_blank" style="text-decoration: none; margin-left: 6px; color: #666;">🔗</a>
         </div>
         <div style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
             <div style="background-color: {color}; color: white; border-radius: 4px; padding: 4px 8px; font-size: 12px;">{topic}</div>
@@ -113,7 +113,7 @@ def create_topic_map(topics_df: pd.DataFrame, citations_df: pd.DataFrame, arxiv_
         cluster_boundary_polygons=True,
         color_cluster_boundaries=True,
         initial_zoom_fraction=0.85,
-        on_click="window.open(`http://llmpedia.streamlit.app/?arxiv_code={arxiv_id}`)",
+        on_click="window.open(`https://llmpedia.ai/?arxiv_code={arxiv_id}`)",
         histogram_data=publication_dates,
         histogram_group_datetime_by="quarter",
         histogram_range=(pd.Timestamp("2020-01-01"), pd.Timestamp.today()),
