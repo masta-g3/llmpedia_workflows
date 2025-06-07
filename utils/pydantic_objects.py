@@ -336,3 +336,9 @@ class GeneratedQuestion(BaseModel):
     """Container for generated LLM question and analysis."""
     sketchpad: str = Field(description="Brainstorm multiple ideas for interesting questions about LLMs")
     question: str = Field(description="The generated question about LLMs")
+
+
+class PunchlineRelevance(BaseModel):
+    """Model to assess relevance between a text punchline and an image."""
+    is_relevant: bool = Field(description="Whether the image is relevant to the punchline text.")
+    explanation: str = Field(description="A brief explanation for the relevance assessment.")

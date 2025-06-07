@@ -130,7 +130,7 @@ langchain-together==0.0.2.post1
 langchainhub==0.1.13
 langsmith==0.1.147
 lazy_loader==0.4
-litellm==1.61.20
+litellm==1.71.1
 llvmlite==0.41.1
 locket==1.0.0
 lxml==5.3.0
