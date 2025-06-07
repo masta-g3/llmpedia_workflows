@@ -1,0 +1,32 @@
+{
+  "component_id": "key_value_v1",
+  "name": "Key-Value Pairs",
+  "description": "Use to display specific data points, parameters, or named results as a list of key-value pairs.",
+  "required_recharts_components": [],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "description": "An array of objects, where each object has a 'key' and a 'value' string.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "key": { "type": "string", "description": "The label or name of the data point." },
+            "value": { "type": "string", "description": "The corresponding value for the data point." }
+          },
+          "required": ["key", "value"]
+        }
+      }
+    },
+    "required": ["items"]
+  },
+  "sample_filled_parameters": {
+    "items": [
+      { "key": "Model Size", "value": "7 Billion Parameters" },
+      { "key": "Training Data", "value": "1.2 Trillion Tokens" },
+      { "key": "BLEU Score (En-Fr)", "value": "41.5" },
+      { "key": "Learning Rate", "value": "1e-4" }
+    ]
+  }
+} 

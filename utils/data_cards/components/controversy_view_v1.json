@@ -1,0 +1,156 @@
+{
+  "component_id": "controversy_view_v1",
+  "name": "Controversy Visualization (Debate Mapper)",
+  "description": "Use to display research controversies with opposing viewpoints and supporting papers positioned on an agreement spectrum.",
+  "required_recharts_components": [
+    "ResponsiveContainer",
+    "BarChart",
+    "CartesianGrid",
+    "XAxis", 
+    "YAxis",
+    "Tooltip",
+    "Legend",
+    "Bar"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "controversy_title": {
+        "type": "string",
+        "description": "Title of the controversy or debate"
+      },
+      "controversy_content": {
+        "type": "string", 
+        "description": "Description of the controversial topic or disagreement"
+      },
+      "opposing_sides": {
+        "type": "array",
+        "description": "Array of opposing positions in the debate",
+        "items": {
+          "type": "object",
+          "properties": {
+            "side": {
+              "type": "string",
+              "description": "Label for this side of the debate (e.g., 'Side A', 'Proponents')"
+            },
+            "position": {
+              "type": "string",
+              "description": "Description of this side's position"
+            },
+            "papers": {
+              "type": "array",
+              "description": "Papers supporting this position",
+              "items": {
+                "type": "string",
+                "description": "ArXiv code of supporting paper"
+              }
+            },
+            "papers_count": {
+              "type": "number",
+              "description": "Number of papers supporting this position"
+            },
+            "strength": {
+              "type": "number",
+              "description": "Relative strength/evidence for this position (0-100)"
+            }
+          },
+          "required": ["side", "position", "papers_count"]
+        }
+      },
+      "spectrum_data": {
+        "type": "array",
+        "description": "Data points positioned on the agreement spectrum",
+        "items": {
+          "type": "object", 
+          "properties": {
+            "paper_title": {
+              "type": "string",
+              "description": "Title of the paper"
+            },
+            "arxiv_code": {
+              "type": "string", 
+              "description": "ArXiv identifier"
+            },
+            "position_score": {
+              "type": "number",
+              "description": "Position on spectrum (-100 to 100, negative for one side, positive for other)"
+            },
+            "confidence": {
+              "type": "number",
+              "description": "Confidence in the position (0-100)"
+            },
+            "side_label": {
+              "type": "string",
+              "description": "Which side this paper supports"
+            }
+          },
+          "required": ["paper_title", "position_score", "side_label"]
+        }
+      },
+      "community_sentiment": {
+        "type": "object",
+        "description": "Overall community sentiment from social media discussions",
+        "properties": {
+          "side_a_support": {
+            "type": "number",
+            "description": "Percentage supporting side A (0-100)"
+          },
+          "side_b_support": {
+            "type": "number", 
+            "description": "Percentage supporting side B (0-100)"
+          },
+          "neutral_undecided": {
+            "type": "number",
+            "description": "Percentage neutral or undecided (0-100)"
+          }
+        }
+      }
+    },
+    "required": [
+      "controversy_title",
+      "controversy_content", 
+      "opposing_sides"
+    ]
+  },
+  "sample_filled_parameters": {
+    "controversy_title": "Scaling Laws vs. Emergent Capabilities Debate",
+    "controversy_content": "The ML community is divided on whether large language model capabilities emerge predictably from scaling laws or represent genuine phase transitions that are fundamentally unpredictable.",
+    "opposing_sides": [
+      {
+        "side": "Predictable Scaling",
+        "position": "Model capabilities follow smooth, predictable scaling laws with sufficient data and compute",
+        "papers": ["2401.11111", "2401.22222"],
+        "papers_count": 2,
+        "strength": 65
+      },
+      {
+        "side": "Emergent Properties", 
+        "position": "Capabilities emerge unpredictably at scale through phase transitions not captured by smooth scaling",
+        "papers": ["2401.33333", "2401.44444"],
+        "papers_count": 2,
+        "strength": 75
+      }
+    ],
+    "spectrum_data": [
+      {
+        "paper_title": "Predictable Scaling of Language Model Performance",
+        "arxiv_code": "2401.11111",
+        "position_score": -70,
+        "confidence": 85,
+        "side_label": "Predictable Scaling"
+      },
+      {
+        "paper_title": "Emergent Abilities in Large Language Models", 
+        "arxiv_code": "2401.33333",
+        "position_score": 80,
+        "confidence": 90,
+        "side_label": "Emergent Properties"
+      }
+    ],
+    "community_sentiment": {
+      "side_a_support": 35,
+      "side_b_support": 45, 
+      "neutral_undecided": 20
+    }
+  }
+}

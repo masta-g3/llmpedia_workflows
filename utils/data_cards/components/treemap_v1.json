@@ -1,0 +1,66 @@
+{
+  "component_id": "treemap_v1",
+  "name": "Treemap (Hierarchical/Proportional)",
+  "description": "Use to display hierarchical data as nested rectangles, where the area of each rectangle is proportional to its value. Good for visualizing budget allocations, file sizes, or category distributions.",
+  "required_recharts_components": [
+    "ResponsiveContainer",
+    "Treemap",
+    "Tooltip"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "description": "Array of data objects for the treemap segments. Can be nested for hierarchy using a 'children' property.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Label for the treemap segment."
+            },
+            "size": {
+              "type": "number",
+              "description": "Numerical value determining the segment area."
+            },
+            "children": {
+              "type": "array",
+              "description": "(Optional) Array of child objects for hierarchical treemaps. Each child object follows the same schema (name, size, children?)."
+            }
+          },
+          "required": [
+            "name",
+            "size"
+          ]
+        }
+      }
+    },
+    "required": [
+      "data"
+    ]
+  },
+  "sample_filled_parameters": {
+    "data": [
+      { 
+        "name": "Group A", 
+        "children": [
+          { "name": "Sub A1", "size": 400 },
+          { "name": "Sub A2", "size": 200 }
+        ]
+      },
+      { 
+        "name": "Group B", 
+        "size": 500 
+      },
+      { 
+        "name": "Group C", 
+        "children": [
+          { "name": "Sub C1", "size": 150 },
+          { "name": "Sub C2", "size": 100 },
+          { "name": "Sub C3", "size": 50 }
+        ]
+      }
+    ]
+  }
+} 

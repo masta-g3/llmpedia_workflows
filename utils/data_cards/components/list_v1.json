@@ -1,0 +1,36 @@
+{
+  "component_id": "list_v1",
+  "name": "Bulleted/Numbered List",
+  "description": "Use to present a list of items, findings, or steps. Can be ordered (numbered) or unordered (bullet points).",
+  "required_recharts_components": [],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "description": "An array of strings, where each string is a list item.",
+        "items": {
+          "type": "string"
+        }
+      },
+      "ordered": {
+        "type": "boolean",
+        "description": "Set to true for a numbered list (1, 2, 3...), false (or omit) for a bulleted list.",
+        "default": false
+      }
+    },
+    "required": [
+      "items"
+    ]
+  },
+  "sample_filled_parameters": {
+    "items": [
+      "First key observation or finding.",
+      "Second related point with **some detail**.",
+      "Third concise takeaway.",
+      "A final application or implication."
+    ],
+    "ordered": false // Example: Bulleted list
+    // "ordered": true // Example: Numbered list
+  }
+} 

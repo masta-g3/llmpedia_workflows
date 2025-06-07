@@ -1,0 +1,33 @@
+{
+  "component_id": "comparison_table_v1",
+  "name": "Comparison Table",
+  "description": "Use to display a simple table comparing features or results across 2-4 items (columns).",
+  "required_recharts_components": [],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "headers": {
+        "type": "array",
+        "description": "Array of strings for the table header row (first element is usually the feature/metric being compared). Example: ['Metric', 'Model A', 'Model B']",
+        "items": { "type": "string" }
+      },
+      "rows": {
+        "type": "array",
+        "description": "Array of rows, where each row is an array of strings corresponding to the headers.",
+        "items": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "required": ["headers", "rows"]
+  },
+  "sample_filled_parameters": {
+    "headers": ["Feature", "Model X", "Model Y"],
+    "rows": [
+      ["Parameter Count", "6B", "7B"],
+      ["Training Time (GPU hrs)", "8000", "9500"],
+      ["Avg. Accuracy", "88.5%", "89.2%"]
+    ]
+  }
+} 

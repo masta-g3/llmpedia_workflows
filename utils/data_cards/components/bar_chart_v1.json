@@ -1,0 +1,74 @@
+{
+  "component_id": "bar_chart_v1",
+  "name": "Bar Chart (Comparative)",
+  "description": "Use to compare numerical values across distinct categories or groups (e.g., models, methods, tasks). Good for showing performance differences, resource usage, etc. Can display one or two value series per category.",
+  "required_recharts_components": [
+    "ResponsiveContainer",
+    "BarChart",
+    "CartesianGrid",
+    "XAxis",
+    "YAxis",
+    "Tooltip",
+    "Legend",
+    "Bar"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "description": "Array of data points, where each object represents a category on the X-axis.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Label for the X-axis category (e.g., 'Task Name', 'Metric')."
+            },
+            "value1": {
+              "type": "number",
+              "description": "First numerical value to plot for this category."
+            },
+            "value1_name": {
+              "type": "string",
+              "description": "Label for the first value series (used in legend and tooltip, e.g., 'Model A')."
+            },
+            "value2": {
+              "type": "number",
+              "description": "(Optional) Second numerical value to plot for comparison."
+            },
+            "value2_name": {
+              "type": "string",
+              "description": "(Optional) Label for the second value series (e.g., 'Model B'). Required if value2 is provided."
+            }
+          },
+          "required": [
+            "category",
+            "value1",
+            "value1_name"
+          ]
+        }
+      },
+      "y_axis_label": {
+          "type": "string",
+          "description": "(Optional) Label for the Y-axis."
+      },
+      "x_axis_label": {
+          "type": "string",
+          "description": "(Optional) Label for the X-axis."
+      }
+    },
+    "required": [
+      "data"
+    ]
+  },
+  "sample_filled_parameters": {
+    "data": [
+      { "category": "Translation", "value1_name": "Model A", "value1": 75, "value2_name": "Model B", "value2": 82 },
+      { "category": "Summarization", "value1_name": "Model A", "value1": 68, "value2_name": "Model B", "value2": 71 },
+      { "category": "Classification", "value1_name": "Model A", "value1": 91, "value2_name": "Model B", "value2": 88 }
+    ],
+    "y_axis_label": "Accuracy (%)",
+    "x_axis_label": "NLP Task"
+  }
+} 

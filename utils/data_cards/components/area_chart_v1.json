@@ -1,0 +1,83 @@
+{
+  "component_id": "area_chart_v1",
+  "name": "Area Chart (Volume/Trend)",
+  "description": "Use to emphasize the volume or magnitude of change over time or continuous data. Good for showing cumulative totals or comparing stacked contributions.",
+  "required_recharts_components": [
+    "ResponsiveContainer",
+    "AreaChart",
+    "CartesianGrid",
+    "XAxis",
+    "YAxis",
+    "Tooltip",
+    "Legend",
+    "Area"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "description": "Array of data points, where each object represents a point on the X-axis.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "x_value": {
+              "type": ["string", "number"],
+              "description": "Value for the X-axis (e.g., Time, Day)."
+            },
+            "y_value1": {
+              "type": "number",
+              "description": "First numerical value (Y-axis) for the area."
+            },
+            "y_value1_name": {
+              "type": "string",
+              "description": "Label for the first area series (legend/tooltip, e.g., 'Metric 1')."
+            },
+            "y_value2": {
+              "type": "number",
+              "description": "(Optional) Second numerical value for a stacked or comparative area."
+            },
+            "y_value2_name": {
+              "type": "string",
+              "description": "(Optional) Label for the second area series. Required if y_value2 provided."
+            }
+          },
+          "required": [
+            "x_value",
+            "y_value1",
+            "y_value1_name"
+          ]
+        }
+      },
+      "y_axis_label": {
+          "type": "string",
+          "description": "(Optional) Label for the Y-axis."
+      },
+      "x_axis_label": {
+          "type": "string",
+          "description": "(Optional) Label for the X-axis."
+      },
+      "stack_offset": {
+          "type": "string",
+          "description": "(Optional) For stacked areas. Use 'expand' for 100% stacking or 'silhouette'/'wiggle' for streamgraph effects. Default is none (overlapping areas).",
+          "enum": ["expand", "silhouette", "wiggle", "none"]
+      }
+    },
+    "required": [
+      "data"
+    ]
+  },
+  "sample_filled_parameters": {
+    "data": [
+      { "x_value": "Jan", "y_value1_name": "Downloads", "y_value1": 4000, "y_value2_name": "Uploads", "y_value2": 2400 },
+      { "x_value": "Feb", "y_value1_name": "Downloads", "y_value1": 3000, "y_value2_name": "Uploads", "y_value2": 1398 },
+      { "x_value": "Mar", "y_value1_name": "Downloads", "y_value1": 2000, "y_value2_name": "Uploads", "y_value2": 6800 },
+      { "x_value": "Apr", "y_value1_name": "Downloads", "y_value1": 2780, "y_value2_name": "Uploads", "y_value2": 3908 },
+      { "x_value": "May", "y_value1_name": "Downloads", "y_value1": 1890, "y_value2_name": "Uploads", "y_value2": 4800 }
+    ],
+    "y_axis_label": "Volume",
+    "x_axis_label": "Month",
+    "stack_offset": "none" // Example: No stacking
+    // "stack_offset": "expand" // Example: 100% stacking
+  }
+} 

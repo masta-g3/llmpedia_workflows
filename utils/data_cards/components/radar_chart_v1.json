@@ -1,0 +1,77 @@
+{
+  "component_id": "radar_chart_v1",
+  "name": "Radar Chart (Multi-dimensional)",
+  "description": "Use to compare multiple quantitative variables across different categories or subjects (spokes). Good for showing strengths/weaknesses across dimensions.",
+  "required_recharts_components": [
+    "ResponsiveContainer",
+    "RadarChart",
+    "PolarGrid",
+    "PolarAngleAxis",
+    "PolarRadiusAxis",
+    "Radar",
+    "Legend",
+    "Tooltip"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "description": "Array of data points, where each object represents a dimension/spoke on the radar.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "subject": {
+              "type": "string",
+              "description": "Label for the dimension/spoke (e.g., 'Feature A', 'Metric X')."
+            },
+            "value1": {
+              "type": "number",
+              "description": "First numerical value for this dimension."
+            },
+            "value1_name": {
+              "type": "string",
+              "description": "Label for the first entity being compared (e.g., 'Model 1')."
+            },
+            "value2": {
+              "type": "number",
+              "description": "(Optional) Second numerical value for this dimension."
+            },
+            "value2_name": {
+              "type": "string",
+              "description": "(Optional) Label for the second entity. Required if value2 provided."
+            },
+            "fullMark": {
+              "type": "number",
+              "description": "(Optional) The maximum possible value for this dimension, sets the scale of the radius axis. If not provided, scale is inferred."
+            }
+          },
+          "required": [
+            "subject",
+            "value1",
+            "value1_name"
+          ]
+        }
+      },
+      "radius_domain": {
+        "type": "array",
+        "description": "(Optional) Explicitly set the domain (min, max) for the radius axis, e.g., [0, 100]. Overrides inferred scale and fullMark.",
+        "items": { "type": "number" },
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "required": [
+      "data"
+    ]
+  },
+  "sample_filled_parameters": {
+    "data": [
+      { "subject": "Speed", "value1_name": "Method A", "value1": 120, "value2_name": "Method B", "value2": 110, "fullMark": 150 },
+      { "subject": "Accuracy", "value1_name": "Method A", "value1": 98, "value2_name": "Method B", "value2": 130, "fullMark": 150 },
+      { "subject": "Robustness", "value1_name": "Method A", "value1": 86, "value2_name": "Method B", "value2": 130, "fullMark": 150 },
+      { "subject": "Efficiency", "value1_name": "Method A", "value1": 99, "value2_name": "Method B", "value2": 100, "fullMark": 150 },
+      { "subject": "Scalability", "value1_name": "Method A", "value1": 85, "value2_name": "Method B", "value2": 90, "fullMark": 150 }
+    ]
+  }
+} 

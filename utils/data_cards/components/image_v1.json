@@ -1,0 +1,30 @@
+{
+  "component_id": "image_v1",
+  "name": "Image Display",
+  "description": "Use to display a relevant image (e.g., figure, diagram, architecture) from the paper. Provide the image URL.",
+  "required_recharts_components": [],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "image_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "The direct URL to the image file (e.g., PNG, JPG, SVG). Ensure the URL is publicly accessible."
+      },
+      "alt_text": {
+        "type": "string",
+        "description": "Descriptive text for the image (for accessibility and if the image fails to load)."
+      },
+      "caption": {
+        "type": "string",
+        "description": "(Optional) A brief caption to display below the image."
+      }
+    },
+    "required": ["image_url", "alt_text"]
+  },
+  "sample_filled_parameters": {
+    "image_url": "https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/recharts/recharts.png", // Example placeholder image
+    "alt_text": "Example Recharts Logo",
+    "caption": "Figure 1: Example visualization component architecture."
+  }
+} 

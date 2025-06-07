@@ -1,0 +1,83 @@
+{
+  "component_id": "scatter_plot_v1",
+  "name": "Scatter Plot (Correlation)",
+  "description": "Use to display the relationship between two numerical variables. Each point represents an observation. Can optionally group points by a third category using color.",
+  "required_recharts_components": [
+    "ResponsiveContainer",
+    "ScatterChart",
+    "CartesianGrid",
+    "XAxis",
+    "YAxis",
+    "ZAxis", // Often used for tooltip info or potentially bubble size
+    "Tooltip",
+    "Legend",
+    "Scatter"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "description": "Array of data points, where each object is a point on the chart.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number",
+              "description": "Numerical value for the X-axis."
+            },
+            "y": {
+              "type": "number",
+              "description": "Numerical value for the Y-axis."
+            },
+            "z": {
+              "type": ["string", "number"],
+              "description": "(Optional) Value for the Z-axis, often shown in tooltip or used for sizing (bubble chart)."
+            },
+            "category": {
+              "type": "string",
+              "description": "(Optional) Category name for grouping points (e.g., by color/shape in legend)."
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        }
+      },
+      "series_name": {
+          "type": "string",
+          "description": "(Optional, use if not grouping by category) Name for the single data series shown in legend/tooltip."
+      },
+      "y_axis_label": {
+          "type": "string",
+          "description": "(Optional) Label for the Y-axis."
+      },
+      "x_axis_label": {
+          "type": "string",
+          "description": "(Optional) Label for the X-axis."
+      },
+      "z_axis_label": {
+          "type": "string",
+          "description": "(Optional) Label describing the Z-axis value (for tooltip)."
+      }
+    },
+    "required": [
+      "data"
+    ]
+  },
+  "sample_filled_parameters": {
+    "data": [
+      { "x": 100, "y": 200, "z": 200, "category": "A" },
+      { "x": 120, "y": 100, "z": 260, "category": "A" },
+      { "x": 170, "y": 300, "z": 400, "category": "B" },
+      { "x": 140, "y": 250, "z": 280, "category": "A" },
+      { "x": 150, "y": 400, "z": 500, "category": "B" },
+      { "x": 110, "y": 280, "z": 200, "category": "B" }
+    ],
+    "x_axis_label": "Parameter 1",
+    "y_axis_label": "Parameter 2",
+    "z_axis_label": "Size"
+    // "series_name": "Observations" // Use this instead of category if points are not grouped
+  }
+} 

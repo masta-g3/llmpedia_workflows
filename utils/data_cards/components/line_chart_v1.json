@@ -1,0 +1,74 @@
+{
+  "component_id": "line_chart_v1",
+  "name": "Line Chart (Trend/Comparison)",
+  "description": "Use to show trends over time or continuous data points. Can display one or two lines for comparison.",
+  "required_recharts_components": [
+    "ResponsiveContainer",
+    "LineChart",
+    "CartesianGrid",
+    "XAxis",
+    "YAxis",
+    "Tooltip",
+    "Legend",
+    "Line"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "description": "Array of data points, where each object represents a point on the X-axis.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "x_value": {
+              "type": ["string", "number"],
+              "description": "Value for the X-axis (e.g., Time, Stage, Parameter Value)."
+            },
+            "y_value1": {
+              "type": "number",
+              "description": "First numerical value (Y-axis) to plot for this point."
+            },
+            "y_value1_name": {
+              "type": "string",
+              "description": "Label for the first line series (used in legend and tooltip, e.g., 'Model A Performance')."
+            },
+            "y_value2": {
+              "type": "number",
+              "description": "(Optional) Second numerical value (Y-axis) for comparison."
+            },
+            "y_value2_name": {
+              "type": "string",
+              "description": "(Optional) Label for the second line series. Required if y_value2 is provided."
+            }
+          },
+          "required": [
+            "x_value",
+            "y_value1",
+            "y_value1_name"
+          ]
+        }
+      },
+      "y_axis_label": {
+          "type": "string",
+          "description": "(Optional) Label for the Y-axis."
+      },
+      "x_axis_label": {
+          "type": "string",
+          "description": "(Optional) Label for the X-axis."
+      }
+    },
+    "required": [
+      "data"
+    ]
+  },
+  "sample_filled_parameters": {
+    "data": [
+      { "x_value": "Epoch 1", "y_value1_name": "Accuracy", "y_value1": 70, "y_value2_name": "Loss", "y_value2": 0.5 },
+      { "x_value": "Epoch 5", "y_value1_name": "Accuracy", "y_value1": 85, "y_value2_name": "Loss", "y_value2": 0.3 },
+      { "x_value": "Epoch 10", "y_value1_name": "Accuracy", "y_value1": 92, "y_value2_name": "Loss", "y_value2": 0.15 }
+    ],
+    "y_axis_label": "Value",
+    "x_axis_label": "Training Epoch"
+  }
+} 

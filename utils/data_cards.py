@@ -1,5 +1,11 @@
 import utils.db.db_utils as db_utils
 import utils.db.paper_db as paper_db
+import os
+import json
+from pathlib import Path
+
+## Path to component definitions
+COMPONENT_DIR = Path(__file__).parent / "components"
 
 html_template = """<!DOCTYPE html>
 <html lang="en">
@@ -168,14 +174,73 @@ html_template = """<!DOCTYPE html>
 </html>"""
 
 
+def load_component_definitions():
+    """Load component definitions from JSON files in the components directory."""
+    definitions = {}
+    if not COMPONENT_DIR.is_dir():
+        print(f"Warning: Component directory not found: {COMPONENT_DIR}")
+        return definitions
+        
+    for filename in os.listdir(COMPONENT_DIR):
+        if filename.endswith(".json"):
+            filepath = COMPONENT_DIR / filename
+            try:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    component_id = data.get("component_id")
+                    if component_id:
+                        definitions[component_id] = {
+                            "name": data.get("name", component_id),
+                            "description": data.get("description", "No description provided."),
+                            # We might load schema later if needed by backend logic
+                            # "parameter_schema": data.get("parameter_schema", {})
+                        }
+                    else:
+                         print(f"Warning: Component ID missing in {filename}")
+            except Exception as e:
+                print(f"Error loading component definition from {filename}: {e}")
+    return definitions
+
 def generate_data_card_html(arxiv_code: str):
     """Generate HTML for a data card."""
     title_map = db_utils.get_arxiv_title_dict()
     title = title_map.get(arxiv_code, "")
+    
+    # TODO: Replace this with the new LLM call and rendering logic
+    # Fetch LLM output (summary, dashboard_structure) using new prompt
+    # Load master_dashboard.js content
+    # Load palette data
+    # Inject data as JSON into script tags
+    # Format the html_template
+
+    ## --- Existing (Old) Logic - To be replaced --- 
     script = paper_db.get_arxiv_dashboard_script(arxiv_code, "script_content")
     summary = paper_db.get_arxiv_dashboard_script(arxiv_code, "summary")
-    if not script:
+    ## --- End of Old Logic --- 
+
+    if not script: # Replace this condition later
         html_card = None
     else:
+        ## Placeholder for new formatting logic
+        # master_script_content = load_master_script()
+        # palette_json = load_palette_json()
+        # llm_output = call_llm_for_dashboard(arxiv_code) # Needs implementation
+        # summary = llm_output['summary'] 
+        # dashboard_json = json.dumps(llm_output['dashboard_structure'])
+        # 
+        # script_to_embed = f"""
+        #  <script id=\"dashboard-structure-data\" type=\"application/json\">
+        #  {dashboard_json}
+        #  </script>
+        #  <script id=\"palette-data\" type=\"application/json\">
+        #  {palette_json}
+        #  </script>
+        #  {master_script_content}
+        #  <script>initializeDynamicDashboard();</script>
+        # """
+        # html_card = html_template.format(title=title, summary=summary, script=script_to_embed)
+        
+        ## Using old logic for now until implemented
         html_card = html_template.format(title=title, summary=summary, script=script)
+
     return html_card

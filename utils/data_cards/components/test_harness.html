@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Test Harness</title>
+    <script src="https://unpkg.com/react@17.0.2/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { padding: 20px; font-family: sans-serif; }
+        .component-container { border: 1px solid #ccc; margin-top: 20px; padding: 15px; min-height: 300px; }
+        select, button { padding: 8px 12px; margin-right: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>Data Card Component Test Harness</h1>
+
+    <div>
+        <label for="component-selector">Select Component:</label>
+        <select id="component-selector">
+            <option value="">-- Select --</option>
+            <!-- Options will be populated dynamically -->
+        </select>
+        <button id="render-button" class="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">
+            Render with Sample Data
+        </button>
+    </div>
+
+    <div id="component-root" class="component-container">
+        <!-- Selected component will be rendered here -->
+    </div>
+
+    <!-- Hidden script tags to hold data -->
+    <script id="component-definitions" type="application/json">
+        {}
+    </script>
+    <script id="palette-data" type="application/json">
+        {}
+    </script>
+
+    <!-- Load the master dashboard script (contains component definitions) -->
+    <!-- IMPORTANT: Adjust the path if master_dashboard.js is moved -->
+    <script src="../assets/master_dashboard.js"></script>
+
+    <script>
+        // --- Test Harness Logic --- 
+        const componentSelector = document.getElementById('component-selector');
+        const renderButton = document.getElementById('render-button');
+        const componentRoot = document.getElementById('component-root');
+        let allComponentDefs = {}; // To store definitions loaded from JSON files
+        let paletteData = {};
+
+        // --- Data Loading --- 
+
+        // Function to fetch a JSON file
+        async function fetchJson(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} for ${url}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`Failed to fetch ${url}:`, error);
+                throw error; // Re-throw to handle in caller
+            }
+        }
+
+        // Function to fetch all component definitions
+        async function loadAllDefinitions() {
+            // List of component definition files (adjust if names change or more are added)
+            const componentFiles = [
+                './bar_chart_v1.json',
+                './pie_chart_v1.json',
+                './text_v1.json',
+                './line_chart_v1.json',
+                './radar_chart_v1.json', 
+                './treemap_v1.json', 
+                './area_chart_v1.json',
+                './scatter_plot_v1.json',
+                './list_v1.json', 
+                './key_value_v1.json',
+                './quote_v1.json',
+                './comparison_table_v1.json',
+                './horizontal_bar_v1.json',
+                './image_v1.json',
+            ];
+            
+            console.log("Attempting to load component definitions...");
+            const definitions = {};
+            try {
+                const results = await Promise.allSettled(
+                    componentFiles.map(file => {
+                        console.log(`Fetching ${file}...`);
+                        return fetchJson(file);
+                    })
+                );
+
+                results.forEach((result, index) => {
+                    const file = componentFiles[index];
+                    if (result.status === 'fulfilled') {
+                        const componentData = result.value;
+                        const componentId = componentData?.component_id;
+                        if (componentId) {
+                            console.log(`Successfully fetched and parsed ${file}`);
+                            definitions[componentId] = componentData;
+                        } else {
+                             console.warn(`Component ID missing in ${file}`);
+                        }
+                    } else {
+                        console.error(`Failed to load component definition from ${file}:`, result.reason);
+                    }
+                });
+                
+                if(Object.keys(definitions).length > 0) {
+                    console.log("Successfully loaded component definitions:", Object.keys(definitions));
+                } else {
+                    console.error("Failed to load any component definitions. Check file paths and server setup.");
+                }
+                return definitions;
+            } catch (error) {
+                console.error("Error during Promise.allSettled for component definitions:", error);
+                return {}; // Return empty object on major failure
+            }
+        }
+
+        // --- Rendering Logic --- 
+        
+        function renderComponent() {
+            console.log("[TestHarness] renderComponent called."); // Check if function is called
+            const selectedComponentId = componentSelector.value;
+            console.log("[TestHarness] Selected Component ID:", selectedComponentId);
+
+            if (!selectedComponentId) {
+                componentRoot.innerHTML = '<p>Please select a component.</p>';
+                return;
+            }
+
+            const componentDef = allComponentDefs[selectedComponentId];
+            console.log("[TestHarness] Found Component Definition:", componentDef); // Check if definition is found
+            
+            const ComponentToRender = componentMap[selectedComponentId]; // From master_dashboard.js
+            console.log("[TestHarness] Mapped React Component:", ComponentToRender ? 'Found' : 'NOT Found'); // Check if component exists in map
+            
+            if (!componentDef) {
+                 componentRoot.innerHTML = `<p style="color: red;">Error: Component definition not found for ID: ${selectedComponentId}</p>`;
+                 return;
+            }
+            
+            const sampleData = componentDef.sample_filled_parameters;
+            console.log("[TestHarness] Extracted Sample Data:", sampleData); // Check sample data
+            
+            const activePalette = paletteData?.palettes?.[paletteData?.default_palette || 'orange_toned'] || { 
+                colors: { background: '#FFF8E1', chart_fill_1: '#FF8C00', chart_fill_2: '#FFA500', grid_stroke: '#ccc' }, 
+                recharts_cell_fills: ['#FF8C00', '#FFA500', '#FFD700'] 
+            }; // Use loaded/default palette
+            console.log("[TestHarness] Using Palette:", activePalette);
+
+            if (!ComponentToRender) {
+                console.error(`[TestHarness] Component implementation not found in componentMap for ID: ${selectedComponentId}`);
+                componentRoot.innerHTML = `<p style="color: red;">Error: Component implementation not found in master script for ID: ${selectedComponentId}</p>`;
+                return;
+            }
+
+            if (!sampleData) {
+                console.warn(`[TestHarness] No sample data found in definition for component ID: ${selectedComponentId}`);
+                componentRoot.innerHTML = `<p style="color: orange;">Warning: No sample data found in definition for component ID: ${selectedComponentId}</p>`;
+                 // Optionally render with empty props if component handles it gracefully?
+                 // For now, just show warning and don't render.
+                 return; 
+            }
+
+            console.log(`[TestHarness] Attempting to render ${selectedComponentId}...`);
+
+            try {
+                // Clear previous rendering
+                ReactDOM.unmountComponentAtNode(componentRoot);
+                // Render the selected component with its sample data and palette
+                ReactDOM.render(
+                    React.createElement(ComponentToRender, { ...sampleData, palette: activePalette }),
+                    componentRoot
+                );
+                 console.log(`[TestHarness] Successfully called ReactDOM.render for ${selectedComponentId}.`);
+            } catch (error) {
+                console.error(`[TestHarness] Error during ReactDOM.render for ${selectedComponentId}:`, error);
+                componentRoot.innerHTML = `<p style="color: red;">Error rendering component: ${error.message}</p>`;
+            }
+        }
+
+        // --- Initialization --- 
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Load actual definitions and palette
+                const [loadedDefs, loadedPalette] = await Promise.all([
+                    loadAllDefinitions(),
+                    fetchJson('../palettes.json') // Fetch palettes relative to harness
+                ]);
+                
+                allComponentDefs = loadedDefs;
+                paletteData = loadedPalette;
+
+                // Populate dropdown
+                componentSelector.innerHTML = '<option value="">-- Select --</option>'; // Clear existing
+                const sortedIds = Object.keys(allComponentDefs).sort();
+                sortedIds.forEach(componentId => {
+                    const option = document.createElement('option');
+                    option.value = componentId;
+                    option.textContent = allComponentDefs[componentId]?.name || componentId;
+                    componentSelector.appendChild(option);
+                });
+
+            } catch (e) { 
+                console.error("Fatal error during initialization:", e);
+                componentRoot.innerHTML = '<p style="color: red;">Failed to load initial component/palette data. Check console.</p>';
+             }
+            
+            renderButton.addEventListener('click', renderComponent);
+        });
+
+    </script>
+
+</body>
+</html> 

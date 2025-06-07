@@ -1,0 +1,71 @@
+{
+  "palettes": {
+    "orange_toned": {
+      "name": "Orange Toned",
+      "colors": {
+        "primary": "#FF8C00",
+        "secondary": "#FFA500",
+        "tertiary": "#FFD700",
+        "quaternary": "#E64A19",
+        "quinary": "#FF5722",
+        "senary": "#FFE0B2",
+        "background": "#FFF8E1",
+        "text": "#333333",
+        "chart_fill_1": "#FF8C00",
+        "chart_fill_2": "#FFA500",
+        "chart_fill_3": "#FFD700",
+        "chart_fill_4": "#E64A19",
+        "chart_fill_5": "#FF5722",
+        "grid_stroke": "#ccc"
+      },
+      "recharts_cell_fills": [
+        "#FF8C00", "#FFA500", "#FFD700", "#E64A19", "#FF5722", "#FFE0B2"
+      ]
+    },
+    "blue_toned": {
+      "name": "Blue Toned",
+      "colors": {
+        "primary": "#1976D2",
+        "secondary": "#2196F3",
+        "tertiary": "#64B5F6",
+        "quaternary": "#0D47A1",
+        "quinary": "#BBDEFB",
+        "senary": "#E3F2FD",
+        "background": "#E3F2FD",
+        "text": "#1A237E",
+        "chart_fill_1": "#1976D2",
+        "chart_fill_2": "#2196F3",
+        "chart_fill_3": "#64B5F6",
+        "chart_fill_4": "#0D47A1",
+        "chart_fill_5": "#BBDEFB",
+        "grid_stroke": "#ccc"
+      },
+      "recharts_cell_fills": [
+        "#1976D2", "#2196F3", "#64B5F6", "#0D47A1", "#BBDEFB", "#E3F2FD"
+      ]
+    },
+    "arxiv_red_toned": {
+      "name": "ArXiv Red Toned",
+      "colors": {
+        "primary": "#b31b1b",
+        "secondary": "#c93232",
+        "tertiary": "#d45454",
+        "quaternary": "#8f1616",
+        "quinary": "#fdecec",
+        "senary": "#fce1e1",
+        "background": "#ffffff",
+        "text": "#000000",
+        "chart_fill_1": "#b31b1b",
+        "chart_fill_2": "#c93232",
+        "chart_fill_3": "#d45454",
+        "chart_fill_4": "#8f1616",
+        "chart_fill_5": "#e57373",
+        "grid_stroke": "#ccc"
+      },
+      "recharts_cell_fills": [
+        "#b31b1b", "#c93232", "#d45454", "#8f1616", "#e57373", "#fce1e1"
+      ]
+    }
+  },
+  "default_palette": "arxiv_red_toned"
+} 

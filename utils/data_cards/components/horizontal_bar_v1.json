@@ -1,0 +1,33 @@
+{
+  "component_id": "horizontal_bar_v1",
+  "name": "Horizontal Bar/Progress",
+  "description": "Use to display single scores, percentages, or values relative to a maximum (0-100% or other scale) using simple horizontal bars.",
+  "required_recharts_components": [],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "description": "An array of objects, each representing a bar.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "label": { "type": "string", "description": "Label for the bar (e.g., Metric Name)." },
+            "value": { "type": "number", "description": "The numerical value achieved." },
+            "max_value": { "type": "number", "description": "The maximum possible value for the scale (e.g., 100 for percentage). Defaults to 100.", "default": 100 },
+            "display_value": { "type": "string", "description": "(Optional) The string to display next to the bar (e.g., '75%', 'High'). If omitted, the raw value is shown."}
+          },
+          "required": ["label", "value"]
+        }
+      }
+    },
+    "required": ["items"]
+  },
+  "sample_filled_parameters": {
+    "items": [
+      { "label": "Task A Accuracy", "value": 85, "max_value": 100, "display_value": "85%" },
+      { "label": "Task B F1-Score", "value": 0.78, "max_value": 1.0, "display_value": "0.78" },
+      { "label": "Resource Utilization", "value": 60, "display_value": "60%" } 
+    ]
+  }
+} 

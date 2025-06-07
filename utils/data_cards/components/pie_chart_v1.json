@@ -1,0 +1,50 @@
+{
+  "component_id": "pie_chart_v1",
+  "name": "Pie Chart (Donut)",
+  "description": "Use to show the proportional breakdown of a whole into its components. Best for a small number of categories (<= 6). Renders as a donut chart.",
+  "required_recharts_components": [
+    "ResponsiveContainer",
+    "PieChart",
+    "Pie",
+    "Cell",
+    "Tooltip",
+    "Legend"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "description": "Array of data points for the chart segments.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Label for the pie segment (used in legend and tooltip)."
+            },
+            "value": {
+              "type": "number",
+              "description": "Numerical value determining the segment size."
+            }
+          },
+          "required": [
+            "name",
+            "value"
+          ]
+        }
+      }
+    },
+    "required": [
+      "data"
+    ]
+  },
+  "sample_filled_parameters": {
+    "data": [
+      { "name": "Category A", "value": 400 },
+      { "name": "Category B", "value": 300 },
+      { "name": "Category C", "value": 300 },
+      { "name": "Category D", "value": 200 }
+    ]
+  }
+} 

@@ -1,0 +1,21 @@
+{
+  "component_id": "text_v1",
+  "name": "Simple Text Block",
+  "description": "Use to display a paragraph of text. Suitable for qualitative findings, explanations, or sections without a clear visual representation.",
+  "required_recharts_components": [],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": "string",
+        "description": "The main text content to display. Can include basic markdown like bold or italics, but avoid complex formatting."
+      }
+    },
+    "required": [
+      "content"
+    ]
+  },
+  "sample_filled_parameters": {
+    "content": "This component displays plain text content provided by the LLM. It's ideal for sections where a chart isn't necessary, such as outlining key qualitative observations or providing context for subsequent visualizations. **Supports basic markdown.**"
+  }
+} 

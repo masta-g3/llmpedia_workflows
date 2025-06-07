@@ -1,0 +1,24 @@
+{
+  "component_id": "quote_v1",
+  "name": "Quote Block",
+  "description": "Use to display a direct, impactful quote extracted from the paper. Styles it distinctly.",
+  "required_recharts_components": [],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "The exact text of the quote."
+      },
+      "source": {
+        "type": "string",
+        "description": "(Optional) The source of the quote (e.g., Section number, page number, author)."
+      }
+    },
+    "required": ["text"]
+  },
+  "sample_filled_parameters": {
+    "text": "Our adapted monolingual models surprisingly outperformed the multilingual baseline across all tested low-resource languages.",
+    "source": "Section 4.2"
+  }
+} 

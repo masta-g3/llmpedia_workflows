@@ -1,0 +1,136 @@
+{
+  "component_id": "theme_panel_v1",
+  "name": "Theme Panel (Interactive Weekly Review)",
+  "description": "Use to display weekly review themes with integrated visualizations, paper citations, and collapsible content.",
+  "required_recharts_components": [
+    "ResponsiveContainer",
+    "BarChart",
+    "CartesianGrid",
+    "XAxis",
+    "YAxis",
+    "Tooltip",
+    "Legend",
+    "Bar"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "theme_title": {
+        "type": "string",
+        "description": "Title of the theme section"
+      },
+      "theme_content": {
+        "type": "string",
+        "description": "Main content/narrative for the theme"
+      },
+      "visualization_data": {
+        "type": "array",
+        "description": "Data points for the theme visualization",
+        "items": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string",
+              "description": "Label for this data point (e.g., paper title, concept)"
+            },
+            "value": {
+              "type": "number",
+              "description": "Numerical value to display"
+            },
+            "category": {
+              "type": "string",
+              "description": "Category or grouping for color coding"
+            },
+            "arxiv_code": {
+              "type": "string",
+              "description": "ArXiv code for paper citations"
+            }
+          },
+          "required": ["label", "value"]
+        }
+      },
+      "visualization_type": {
+        "type": "string",
+        "enum": ["bar", "scatter", "bubble", "network"],
+        "description": "Type of visualization to render"
+      },
+      "papers": {
+        "type": "array",
+        "description": "Array of papers relevant to this theme",
+        "items": {
+          "type": "object",
+          "properties": {
+            "arxiv_code": {
+              "type": "string",
+              "description": "ArXiv identifier"
+            },
+            "title": {
+              "type": "string",
+              "description": "Paper title"
+            },
+            "summary": {
+              "type": "string",
+              "description": "Brief summary or key finding"
+            }
+          },
+          "required": ["arxiv_code", "title"]
+        }
+      },
+      "concepts": {
+        "type": "array",
+        "description": "Key concepts covered in this theme",
+        "items": {
+          "type": "string"
+        }
+      },
+      "insights": {
+        "type": "string",
+        "description": "Key insights or takeaways from the visualization"
+      }
+    },
+    "required": [
+      "theme_title",
+      "theme_content",
+      "visualization_data"
+    ]
+  },
+  "sample_filled_parameters": {
+    "theme_title": "Multimodal Learning Breakthroughs",
+    "theme_content": "This week saw significant advances in multimodal learning architectures, with three key papers introducing novel attention mechanisms that bridge vision and language understanding.",
+    "visualization_data": [
+      { 
+        "label": "CLIP-Enhanced Attention", 
+        "value": 89, 
+        "category": "Vision-Language", 
+        "arxiv_code": "2401.12345"
+      },
+      { 
+        "label": "Cross-Modal Fusion", 
+        "value": 92, 
+        "category": "Architecture", 
+        "arxiv_code": "2401.67890"
+      },
+      { 
+        "label": "Unified Embedding Space", 
+        "value": 85, 
+        "category": "Representation", 
+        "arxiv_code": "2401.11111"
+      }
+    ],
+    "visualization_type": "bar",
+    "papers": [
+      {
+        "arxiv_code": "2401.12345",
+        "title": "Enhanced Cross-Modal Attention for Vision-Language Tasks",
+        "summary": "Introduces a novel attention mechanism that improves vision-language alignment by 15%"
+      },
+      {
+        "arxiv_code": "2401.67890", 
+        "title": "Unified Multimodal Architecture for Real-Time Processing",
+        "summary": "Achieves state-of-the-art performance on multiple benchmarks with 3x faster inference"
+      }
+    ],
+    "concepts": ["Cross-modal attention", "Vision-language alignment", "Multimodal fusion"],
+    "insights": "The visualization shows performance improvements across different multimodal learning approaches, with cross-modal fusion achieving the highest scores."
+  }
+}
