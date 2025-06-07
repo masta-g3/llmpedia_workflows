@@ -32,10 +32,20 @@ def create_mock_structured_content():
                 "content": "Three significant papers introduced novel architectures for vision-language tasks, with improvements in cross-modal attention mechanisms.",
                 "papers": ["2401.12345", "2401.67890"],
                 "concepts": ["cross-modal attention", "vision-language fusion", "multimodal architectures"],
-                "metrics_suggested": {
-                    "visualization_type": "bar",
-                    "key_metrics": ["performance_score", "efficiency"],
-                    "comparison_axis": "methodology"
+                "chart_specification": {
+                    "type": "bar",
+                    "visualization_mode": "conceptual",
+                    "data_structure": {
+                        "x_axis_items": ["GPT-4o", "Claude-3.5", "Gemini-1.5"],
+                        "y_axis_concept": "multimodal_performance",
+                        "categories": []
+                    },
+                    "visual_story": "Comparison of leading models on multimodal tasks",
+                    "axis_labels": {
+                        "x": "Model",
+                        "y": "Multimodal Capability"
+                    },
+                    "title_suffix": "Performance"
                 }
             },
             {
@@ -45,6 +55,7 @@ def create_mock_structured_content():
                 "concepts": ["model pruning", "quantization", "efficient training"],
                 "metrics_suggested": {
                     "visualization_type": "scatter",
+                    "visualization_mode": "quantitative",
                     "key_metrics": ["speedup", "accuracy_retention"],
                     "comparison_axis": "performance"
                 }
@@ -87,7 +98,22 @@ def create_mock_interactive_components():
                     "title": "Multimodal Learning Breakthroughs",
                     "content": "Three significant papers introduced novel architectures.",
                     "papers": ["2401.12345", "2401.67890"],
-                    "concepts": ["cross-modal attention"]
+                    "concepts": ["cross-modal attention"],
+                    "chart_specification": {
+                        "type": "grouped_bar",
+                        "visualization_mode": "conceptual",
+                        "data_structure": {
+                            "x_axis_items": ["GPT-4o", "Claude-3.5", "Gemini-1.5"],
+                            "y_axis_concept": "capability",
+                            "categories": ["Vision", "Language", "Reasoning"]
+                        },
+                        "visual_story": "Compare multimodal capabilities across different dimensions",
+                        "axis_labels": {
+                            "x": "AI Models",
+                            "y": "Capability Level"
+                        },
+                        "title_suffix": "Capability Analysis"
+                    }
                 },
                 "visualization": {
                     "type": "bar",

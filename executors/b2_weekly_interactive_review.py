@@ -20,6 +20,7 @@ import utils.plots as plots
 import utils.data_cards as dc
 import utils.interactive_components as ic
 from utils.logging_utils import setup_logger
+from utils.instruct import run_instructor_query
 import prompts.weekly_prompts as wp
 
 # Set up logging
@@ -145,10 +146,20 @@ def generate_structured_weekly_content(
           "content": "Theme paragraph content...",
           "papers": ["arxiv:1234.5678", "arxiv:2345.6789"],
           "concepts": ["concept1", "concept2"],
-          "metrics_suggested": {
-            "visualization_type": "network|timeline|bubble|bar|scatter",
-            "key_metrics": ["metric1", "metric2"],
-            "comparison_axis": "methodology|performance|novelty|temporal"
+          "chart_specification": {
+            "type": "bar|scatter|line|grouped_bar|stacked_bar|radar|network",
+            "visualization_mode": "conceptual|quantitative", 
+            "data_structure": {
+              "x_axis_items": ["item1", "item2", "item3"],
+              "y_axis_concept": "performance|effectiveness|ranking|count",
+              "categories": ["category1", "category2"] // optional for grouped/stacked charts
+            },
+            "visual_story": "Brief description of what this chart should convey",
+            "axis_labels": {
+              "x": "X axis label",
+              "y": "Y axis label"
+            },
+            "title_suffix": "suffix for chart title" // optional
           }
         }
       ],
@@ -161,6 +172,34 @@ def generate_structured_weekly_content(
         ]
       }
     }
+    
+    IMPORTANT: Generate intelligent chart specifications:
+    
+    1. VISUALIZATION_MODE:
+    - Use "quantitative" ONLY when specific numbers are mentioned in content
+    - Use "conceptual" for general relationships without specific data
+    
+    2. CHART_TYPE Selection based on content:
+    - "bar": Compare discrete items/methods (most common)
+    - "grouped_bar": Compare items across multiple dimensions
+    - "scatter": Show relationships between two variables
+    - "line": Show trends/progression over time
+    - "stacked_bar": Show composition/parts of whole
+    - "radar": Compare items across multiple criteria
+    - "network": Show relationships/connections between concepts
+    
+    3. DATA_STRUCTURE should reflect what you want to compare:
+    - x_axis_items: The main things being compared (models, methods, approaches)
+    - y_axis_concept: What metric/quality is being measured
+    - categories: For grouped charts, what dimensions to show
+    
+    4. VISUAL_STORY: One sentence explaining what insight the chart reveals
+    
+    Examples:
+    - Content: "GPT-4o outperformed Claude across reasoning tasks"
+      → type: "bar", x_axis_items: ["GPT-4o", "Claude"], y_axis_concept: "performance"
+    - Content: "Three optimization methods showed different speed-accuracy tradeoffs" 
+      → type: "scatter", x_axis_items: ["Method A", "B", "C"], y_axis_concept: "efficiency_ranking"
     
     {style_guidelines}
     
@@ -191,33 +230,65 @@ def generate_structured_weekly_content(
     logger.info("Generating structured content using LLM")
     
     try:
-        response = vs.run_instructor_query(
-            system_prompt=wp.WEEKLY_SYSTEM_PROMPT,
-            user_prompt=prompt,
+        response = run_instructor_query(
+            system_message=wp.WEEKLY_SYSTEM_PROMPT,
+            user_message=prompt,
             llm_model=DEFAULT_MODEL,
             temperature=1,
-            max_tokens=50000
+            max_tokens=50000,
+            process_id="generate_structured_weekly_content"
         )
+        
+        logger.info(f"Raw LLM response: {response[:500]}...")  # Log first 500 chars for debugging
         
         # Clean response and parse JSON
         response = response.strip()
         if response.startswith('```json'):
             response = response[7:]
+        if response.startswith('```'):
+            response = response[3:]
         if response.endswith('```'):
             response = response[:-3]
+        
+        # Additional cleaning - remove any extra whitespace and newlines at start/end
+        response = response.strip()
+        
+        # Try to find JSON content if wrapped in other text
+        if '{' in response and '}' in response:
+            start_idx = response.find('{')
+            end_idx = response.rfind('}') + 1
+            response = response[start_idx:end_idx]
+        
+        logger.info(f"Cleaned JSON response: {response[:200]}...")  # Log cleaned version
         
         structured_content = json.loads(response)
         logger.info("Successfully generated structured content")
         return structured_content
         
-    except Exception as e:
-        logger.error(f"Failed to generate structured content: {e}")
+    except json.JSONDecodeError as je:
+        logger.error(f"JSON decode error: {je}")
+        logger.error(f"Problematic response: {response}")
         # Fallback to basic structure
         return {
             "intro": {
-                "content": "Failed to generate structured content",
+                "content": f"Failed to parse JSON response: {str(je)[:100]}",
                 "trends_data": {
-                    "volume_observation": "Data unavailable",
+                    "volume_observation": "JSON parsing failed",
+                    "main_themes": ["General ML Research"]
+                }
+            },
+            "themes": [],
+            "controversy": None
+        }
+    except Exception as e:
+        logger.error(f"Failed to generate structured content: {e}")
+        logger.error(f"Response that caused error: {response if 'response' in locals() else 'No response'}")
+        # Fallback to basic structure
+        return {
+            "intro": {
+                "content": f"Failed to generate structured content: {str(e)[:100]}",
+                "trends_data": {
+                    "volume_observation": "Content generation failed",
                     "main_themes": ["General ML Research"]
                 }
             },
@@ -294,12 +365,13 @@ def generate_theme_visualization_with_guidance(theme_data: Dict[str, Any], paper
             concepts=theme_data.get('concepts', [])
         )
         
-        response = vs.run_instructor_query(
-            system_prompt="You are a data visualization expert creating chart specifications.",
-            user_prompt=prompt,
+        response = run_instructor_query(
+            system_message="You are a data visualization expert creating chart specifications.",
+            user_message=prompt,
             llm_model=DEFAULT_MODEL,
             temperature=0.7,
-            max_tokens=2000
+            max_tokens=2000,
+            process_id="generate_theme_visualization"
         )
         
         # Clean and parse response

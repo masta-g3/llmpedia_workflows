@@ -3,6 +3,7 @@ import pandas as pd
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 import utils.data_cards as dc
+import utils.plots as plots
 from utils.logging_utils import setup_logger
 
 logger = setup_logger(__name__, "interactive_components.log")
@@ -139,20 +140,36 @@ def generate_data_card_for_controversy(controversy_data: Dict[str, Any], visuali
         logger.error(f"Failed to generate data card for controversy: {e}")
         return f"<div class='error'>Failed to generate controversy visualization</div>"
 
-def generate_trends_chart(trends_data: Dict[str, Any], weekly_counts: Dict[str, int]) -> str:
-    """Generate a trends chart using the existing line chart component."""
-    
-    component_path = Path(__file__).parent / "data_cards" / "components" / "line_chart_v1.json"
+def generate_trends_chart(trends_data: Dict[str, Any], weekly_counts: Dict[str, int], current_date: str = None) -> str:
+    """Generate an interactive Plotly trends chart."""
     
     try:
-        with open(component_path, 'r') as f:
-            component_def = json.load(f)
+        # Use the existing Plotly function from utils.plots
+        if not current_date:
+            current_date = max(weekly_counts.keys()) if weekly_counts else "2025-01-01"
         
-        # Convert weekly_counts to chart data format
-        sorted_weeks = sorted(weekly_counts.items(), key=lambda x: pd.to_datetime(x[0]))
+        plotly_json = plots.generate_publication_trends_plot(weekly_counts, current_date)
         
+        # Create HTML with embedded Plotly chart
+        chart_id = "trends-chart"
+        html_content = f"""
+        <div class="plotly-chart-container">
+            <div id="{chart_id}" style="width:100%; height:400px;"></div>
+            <script>
+                var plotlyData = {plotly_json};
+                Plotly.newPlot('{chart_id}', plotlyData.data, plotlyData.layout, {{responsive: true}});
+            </script>
+        </div>
+        """
+        
+        logger.info("Generated interactive Plotly trends chart")
+        return html_content
+        
+    except Exception as e:
+        logger.error(f"Failed to generate Plotly trends chart: {e}")
+        # Fallback to simple chart
         chart_data = []
-        for date_str, count in sorted_weeks:
+        for date_str, count in sorted(weekly_counts.items(), key=lambda x: pd.to_datetime(x[0])):
             date_dt = pd.to_datetime(date_str)
             formatted_date = date_dt.strftime("%b %d")
             chart_data.append({
@@ -163,18 +180,79 @@ def generate_trends_chart(trends_data: Dict[str, Any], weekly_counts: Dict[str, 
         
         parameters = {
             "data": chart_data,
-            "y_axis_label": "Number of Papers",
+            "y_axis_label": "Number of Papers", 
             "x_axis_label": "Week"
         }
         
-        html_content = generate_simple_chart_html(parameters, "trends")
+        return generate_simple_chart_html(parameters, "trends")
+
+def generate_plotly_theme_chart(theme_data: Dict[str, Any], chart_id: str) -> str:
+    """Generate an interactive Plotly chart for a theme."""
+    
+    try:
+        theme_title = theme_data.get('title', 'Theme')
+        theme_content = theme_data.get('content', '')
         
-        logger.info("Generated trends chart")
+        # Check if we have new chart specification format
+        chart_spec = theme_data.get('chart_specification')
+        
+        if chart_spec:
+            # Use new LLM-driven chart generation
+            plotly_json = plots.generate_chart_from_specification(chart_spec, theme_title)
+            chart_type = chart_spec.get('type', 'bar')
+            viz_mode = chart_spec.get('visualization_mode', 'quantitative')
+            logger.info(f"Generated LLM-specified chart for: {theme_title} (type: {chart_type}, mode: {viz_mode})")
+        else:
+            # Fallback to old method for backward compatibility
+            visualization_mode = theme_data.get('metrics_suggested', {}).get('visualization_mode', 'quantitative')
+            plotly_json = plots.generate_theme_comparison_plot(theme_title, theme_content, visualization_mode)
+            logger.info(f"Generated fallback chart for: {theme_title} (mode: {visualization_mode})")
+        
+        # Create HTML with embedded Plotly chart
+        html_content = f"""
+        <div class="plotly-chart-container">
+            <div id="{chart_id}" style="width:100%; height:400px;"></div>
+            <script>
+                var plotlyData = {plotly_json};
+                Plotly.newPlot('{chart_id}', plotlyData.data, plotlyData.layout, {{responsive: true}});
+            </script>
+        </div>
+        """
         return html_content
         
     except Exception as e:
-        logger.error(f"Failed to generate trends chart: {e}")
-        return "<div class='error'>Failed to generate trends chart</div>"
+        logger.error(f"Failed to generate Plotly theme chart: {e}")
+        # Fallback to simple visualization
+        return generate_data_card_for_theme(theme_data, {"type": "bar", "data": [], "insights": "Visualization unavailable"})
+
+def generate_plotly_controversy_chart(controversy_data: Dict[str, Any], chart_id: str) -> str:
+    """Generate an interactive Plotly chart for controversy section."""
+    
+    try:
+        controversy_title = controversy_data.get('title', 'Controversy')
+        controversy_content = controversy_data.get('content', '')
+        
+        # Use the existing Plotly function from utils.plots
+        plotly_json = plots.generate_controversy_plot(controversy_title, controversy_content)
+        
+        # Create HTML with embedded Plotly chart
+        html_content = f"""
+        <div class="plotly-chart-container">
+            <div id="{chart_id}" style="width:100%; height:400px;"></div>
+            <script>
+                var plotlyData = {plotly_json};
+                Plotly.newPlot('{chart_id}', plotlyData.data, plotlyData.layout, {{responsive: true}});
+            </script>
+        </div>
+        """
+        
+        logger.info(f"Generated interactive Plotly controversy chart for: {controversy_title}")
+        return html_content
+        
+    except Exception as e:
+        logger.error(f"Failed to generate Plotly controversy chart: {e}")
+        # Fallback to simple visualization
+        return generate_data_card_for_controversy(controversy_data, {"type": "divergent_bar", "data": [], "insights": "Visualization unavailable"})
 
 def assemble_interactive_report_html(
     structured_content: Dict[str, Any], 
@@ -185,7 +263,7 @@ def assemble_interactive_report_html(
     
     html_parts = []
     
-    # Header
+    # Header with Plotly
     html_parts.append("""
     <!DOCTYPE html>
     <html lang="en">
@@ -193,6 +271,7 @@ def assemble_interactive_report_html(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Interactive Weekly Review - LLMpedia</title>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
         <style>
             body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
             .header { text-align: center; margin-bottom: 40px; }
@@ -201,6 +280,8 @@ def assemble_interactive_report_html(
             .theme-header { background: #b31b1b; color: white; padding: 15px; font-weight: bold; }
             .theme-content { padding: 15px; }
             .controversy-section { border: 2px solid #b31b1b; border-radius: 8px; margin-top: 30px; }
+            .plotly-chart-container { margin: 20px 0; }
+            .chart-fallback { background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd; }
         </style>
     </head>
     <body>
@@ -217,9 +298,11 @@ def assemble_interactive_report_html(
     # Trends section
     html_parts.append('<div class="section">')
     html_parts.append('<h2>Publication Trends</h2>')
+    current_date = max(weekly_counts.keys()) if weekly_counts else "2025-01-01"
     trends_chart = generate_trends_chart(
         structured_content.get('intro', {}).get('trends_data', {}),
-        weekly_counts
+        weekly_counts,
+        current_date
     )
     html_parts.append(trends_chart)
     html_parts.append('</div>')
@@ -228,9 +311,8 @@ def assemble_interactive_report_html(
     html_parts.append('<div class="section">')
     html_parts.append('<h2>Research Themes</h2>')
     
-    for theme_component in interactive_components.get('themes', []):
+    for i, theme_component in enumerate(interactive_components.get('themes', [])):
         theme_data = theme_component.get('theme_data', {})
-        viz_spec = theme_component.get('visualization', {})
         
         html_parts.append('<div class="theme-panel">')
         html_parts.append(f'<div class="theme-header">{theme_data.get("title", "Theme")}</div>')
@@ -239,9 +321,21 @@ def assemble_interactive_report_html(
         # Add theme content
         html_parts.append(f'<p>{theme_data.get("content", "")}</p>')
         
-        # Add visualization
-        theme_card = generate_data_card_for_theme(theme_data, viz_spec)
-        html_parts.append(theme_card)
+        # Add interactive Plotly visualization
+        chart_id = f"theme-chart-{i}"
+        theme_chart = generate_plotly_theme_chart(theme_data, chart_id)
+        html_parts.append(theme_chart)
+        
+        # Add paper list
+        papers = theme_data.get('papers', [])
+        if papers:
+            html_parts.append('<div class="papers-list">')
+            html_parts.append('<p><strong>Related Papers:</strong></p>')
+            html_parts.append('<ul>')
+            for paper_id in papers:
+                html_parts.append(f'<li>{paper_id}</li>')
+            html_parts.append('</ul>')
+            html_parts.append('</div>')
         
         html_parts.append('</div>')
         html_parts.append('</div>')
@@ -251,14 +345,14 @@ def assemble_interactive_report_html(
     # Controversy section
     if interactive_components.get('controversy'):
         controversy_data = structured_content.get('controversy', {})
-        controversy_viz = interactive_components.get('controversy', {})
         
         html_parts.append('<div class="controversy-section">')
         html_parts.append(f'<h2>{controversy_data.get("title", "Research Controversy")}</h2>')
         html_parts.append(f'<p>{controversy_data.get("content", "")}</p>')
         
-        controversy_card = generate_data_card_for_controversy(controversy_data, controversy_viz)
-        html_parts.append(controversy_card)
+        # Add interactive Plotly controversy chart
+        controversy_chart = generate_plotly_controversy_chart(controversy_data, "controversy-chart")
+        html_parts.append(controversy_chart)
         
         html_parts.append('</div>')
     
