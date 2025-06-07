@@ -13,7 +13,7 @@ from utils.logging_utils import setup_logger
 import utils.db.paper_db as paper_db
 import utils.app_utils as au
 import utils.tweet as tweet
-import utils.vector_store as vector_store
+import utils.vector_store as vs
 from utils.tweet import TweetThread
 
 logger = setup_logger(__name__, "a3_weekly_review_tweet.log")
@@ -21,14 +21,16 @@ logger = setup_logger(__name__, "a3_weekly_review_tweet.log")
 def create_weekly_review_tweet(weekly_content: str, weekly_highlight: str, date_str: str, num_papers_str: str) -> TweetThread:
     """Create a TweetThread object for the weekly review tweet."""
     # Generate the tweet content using the LLM
-    tweet_content = vector_store.write_weekly_review_post(
+    tweet_content = vs.write_weekly_review_post(
         report_date=date_str,
         weekly_content=weekly_content,
         weekly_highlight=weekly_highlight,
         num_papers_str=num_papers_str,
-        llm_model="gemini/gemini-2.5-pro-exp-03-25",
+        llm_model="claude-3-7-sonnet-20250219",
         temperature=1
     )
+
+    bolded_tweet_content = tweet.bold(tweet_content)
     
     # Create metadata
     metadata = {
@@ -38,7 +40,7 @@ def create_weekly_review_tweet(weekly_content: str, weekly_highlight: str, date_
     
     # Create the tweet thread
     return TweetThread.create_simple_tweet(
-        content=tweet_content,
+        content=bolded_tweet_content,
         tweet_type="weekly_review",
         metadata=metadata
     )
@@ -47,14 +49,21 @@ def main():
     """Generate and send weekly review tweet."""
     logger.info("Starting weekly review tweet process")
     
+    if len(sys.argv) < 2:
+        # logger.error("Usage: python executors/a3_weekly_review_tweet.py <YYYY-MM-DD>")
+        # sys.exit(1)
+        date_str = "2025-03-24"
+    else:
+        date_str = sys.argv[1]
+    
+    # Validate date format
     try:
-        # Get the date for this week (Monday)
-        today = datetime.now().date()
-        days_since_monday = today.weekday()
-        current_monday = today - timedelta(days=days_since_monday)
-        date_str = current_monday.strftime("%Y-%m-%d")
-        date_str = "2025-03-10"
+        datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        logger.error(f"Invalid date format: {date_str}. Please use YYYY-MM-DD.")
+        sys.exit(1)
         
+    try:
         logger.info(f"Fetching weekly review content for week of {date_str}")
         
         # Check if the weekly content exists for this week
@@ -83,7 +92,7 @@ def main():
                 tweet_content=tweet_thread,
                 logger=logger,
                 verify=True,
-                headless=False
+                headless=True
             )
             if tweet_success:
                 break
@@ -104,4 +113,4 @@ def main():
         raise
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    main()

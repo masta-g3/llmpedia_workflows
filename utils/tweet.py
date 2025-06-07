@@ -34,44 +34,11 @@ PHONE = os.getenv("TWITTER_PHONE")
 ## DATA MODELS    ##
 ####################
 
-class TweetImageConfig(BaseModel):
-    """Configuration for a tweet's image source."""
-    source_type: str = Field(
-        ...,
-        description="Type of image source: 'path' or 'function'",
-        pattern="^(path|function)$",
-    )
-    source: str = Field(
-        ..., description="Path template or function name that generates image path"
-    )
-    description: str = Field(
-        default="", description="Description of what this image represents"
-    )
-
-
-class TweetContentConfig(BaseModel):
-    """Configuration for a tweet's text content source."""
-    content_type: str = Field(
-        ...,
-        description="Type of content: 'text' or 'function'",
-        pattern="^(text|function)$",
-    )
-    content: str = Field(
-        ..., description="Static text or function name that generates text"
-    )
-    description: str = Field(
-        default="", description="Description of what this content represents"
-    )
-
 
 class TweetConfig(BaseModel):
     """Configuration for a single tweet in a thread."""
-    content: TweetContentConfig = Field(
-        ..., description="The tweet's text content configuration"
-    )
-    images: Optional[List[TweetImageConfig]] = Field(
-        default=None, description="List of image configurations for this tweet"
-    )
+
+    generator: str = Field(..., description="Name of the generator from the registry")
     position: int = Field(
         ..., description="Position of this tweet in the thread (0-based)", ge=0
     )
@@ -79,15 +46,18 @@ class TweetConfig(BaseModel):
 
 class TweetThreadConfig(BaseModel):
     """Configuration for a complete tweet thread type."""
+
     name: str = Field(..., description="Name of this tweet thread configuration")
     description: str = Field(
         ..., description="Description of what this tweet thread does"
     )
-    tweets: List[TweetConfig] = Field(..., description="List of tweets in this thread")
+    # The 'tweets' field now uses the modified TweetConfig
+    tweets: List[TweetConfig] = Field(..., description="List of tweets in this thread using generator names") # Updated description slightly
 
 
 class Tweet(BaseModel):
     """A single tweet with its actual content and media."""
+
     content: str = Field(..., description="The actual text content of the tweet")
     images: Optional[List[str]] = Field(
         default=None, description="List of actual image file paths"
@@ -97,10 +67,13 @@ class Tweet(BaseModel):
 
 class TweetThread(BaseModel):
     """A complete tweet thread ready to be sent."""
+
     arxiv_code: Optional[str] = Field(
         default=None, description="Arxiv code of the paper being tweeted about"
     )
-    tweet_type: str = Field(..., description="Type of tweet thread (e.g. 'insight_v5', 'daily_update')")
+    tweet_type: str = Field(
+        ..., description="Type of tweet thread (e.g. 'insight_v5', 'daily_update')"
+    )
     tweets: List[Tweet] = Field(..., description="List of tweets in the thread")
     created_at: datetime.datetime = Field(
         default_factory=datetime.datetime.now,
@@ -111,25 +84,27 @@ class TweetThread(BaseModel):
     )
 
     @classmethod
-    def create_simple_tweet(cls, content: str, images: Optional[List[str]] = None, 
-                           tweet_type: str = "simple", metadata: Optional[Dict[str, Any]] = None) -> "TweetThread":
+    def create_simple_tweet(
+        cls,
+        content: str,
+        images: Optional[List[str]] = None,
+        tweet_type: str = "simple",
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> "TweetThread":
         """Create a simple tweet thread with a single tweet.
-        
+
         Args:
             content: The text content of the tweet
             images: Optional list of image paths
             tweet_type: Type identifier for the tweet
             metadata: Optional additional metadata
-            
+
         Returns:
             A TweetThread object with a single tweet
         """
         tweet = Tweet(content=content, images=images, position=0)
-        return cls(
-            tweet_type=tweet_type,
-            tweets=[tweet],
-            metadata=metadata
-        )
+        return cls(tweet_type=tweet_type, tweets=[tweet], metadata=metadata)
+
 
 def boldify(text):
     chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -142,7 +117,8 @@ def boldify(text):
             bolded_text += character
     return bolded_text
 
-def bold(input_text, extra_str):
+
+def bold(input_text, extra_str=None):
     """Format text with bold and italic characters."""
     chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     bold_italic_chars = "𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵"
@@ -160,7 +136,10 @@ def bold(input_text, extra_str):
     ## Regex to find text in double brackets and apply the boldify function to them.
     output = re.sub(
         r"\[\[([^]]*)\]\]",
-        lambda m: "[[" + boldify(m.group(1)) + "]] (" + extra_str + ")",
+        lambda m: "[["
+        + boldify(m.group(1))
+        + "]]"
+        + (" (" + extra_str + ")" if extra_str else ""),
         input_text,
     )
     output = output.replace("[[", "").replace("]]", "")
@@ -430,7 +409,7 @@ def send_tweet(
     """Send a tweet with content and images using Selenium."""
 
     logger = logger or get_console_logger()
-    
+
     logger.info("Starting tweet sending process")
     driver = setup_browser(logger, headless=headless)
     login_twitter(driver, logger)
@@ -564,7 +543,10 @@ def send_tweet(
     # Verify tweet elements
     if verify:
         elements_verified, verification_message = verify_tweet_elements(
-            driver, tweet_content, expected_image_count=expected_image_count, logger=logger
+            driver,
+            tweet_content,
+            expected_image_count=expected_image_count,
+            logger=logger,
         )
         if not elements_verified:
             logger.error(f"Tweet verification failed: {verification_message}")
@@ -606,31 +588,38 @@ def send_tweet(
     return True
 
 
-def extract_author_tweet_data(tweet_elem, paper_title, paper_authors, logger: Optional[logging.Logger] = None) -> Optional[dict]:
+def extract_author_tweet_data(
+    tweet_elem, paper_title, paper_authors
+) -> Optional[dict]:
     """Extract tweet data if it's from a paper author."""
-    logger = logger or get_console_logger()
-    try:
-        # Extract tweet text
-        tweet_text = tweet_elem.find_element(
-            By.CSS_SELECTOR, '[data-testid="tweetText"]'
-        ).text
+    # Extract tweet text
+    tweet_text = tweet_elem.find_element(
+        By.CSS_SELECTOR, '[data-testid="tweetText"]'
+    ).text
 
-        # Extract username
-        username = tweet_elem.find_element(
-            By.CSS_SELECTOR, '[data-testid="User-Name"]'
-        ).text.split("@")[1].split("·")[0].strip()
+    # Extract username
+    username = (
+        tweet_elem.find_element(By.CSS_SELECTOR, '[data-testid="User-Name"]')
+        .text.split("@")[1]
+        .split("·")[0]
+        .strip()
+    )
 
-        # Check if username matches any author
-        if any(username.lower() in author.lower() for author in paper_authors):
-            return {"text": tweet_text, "username": username}
-
-    except Exception as e:
-        logger.error(f"Error extracting tweet data: {str(e)}")
+    is_author_post = vs.assess_tweet_ownership(
+        paper_title, paper_authors, tweet_text, username, llm_model="gemini/gemini-2.5-pro-preview-05-06"
+    )
+    if is_author_post:
+        link = tweet_elem.find_element(
+            By.CSS_SELECTOR, 'a[href*="/status/"]'
+        ).get_attribute("href")
+        return {"text": tweet_text, "username": username, "link": link}
+    else:
         return None
 
-    return None
 
-def extract_tweet_data(tweet_elem, logger: Optional[logging.Logger] = None) -> Optional[dict]:
+def extract_tweet_data(
+    tweet_elem, logger: Optional[logging.Logger] = None
+) -> Optional[dict]:
     """Extract all relevant data from a tweet element."""
     logger = logger or get_console_logger()
     try:
@@ -665,7 +654,9 @@ def extract_tweet_data(tweet_elem, logger: Optional[logging.Logger] = None) -> O
 
         # Try to get timestamp, but don't fail if not found
         try:
-            tweet_data["tweet_timestamp"] = tweet_elem.find_element(By.TAG_NAME, "time").get_attribute("datetime")
+            tweet_data["tweet_timestamp"] = tweet_elem.find_element(
+                By.TAG_NAME, "time"
+            ).get_attribute("datetime")
         except Exception as e:
             tweet_data["tweet_timestamp"] = None
             logger.warning("Error extracting tweet timestamp")
@@ -716,7 +707,7 @@ def extract_tweet_data(tweet_elem, logger: Optional[logging.Logger] = None) -> O
                 By.CSS_SELECTOR, 'svg[aria-label="Verified account"]'
             )
         )
-        
+
         ## Check for quote tweet.
         # quote_tweet = None
         # try:
@@ -725,7 +716,7 @@ def extract_tweet_data(tweet_elem, logger: Optional[logging.Logger] = None) -> O
         #     )
         #     if quote_tweet_elements:
         #         quote_tweet_data = {}
-                
+
         #         # Extract quoted author, text and link in a simplified way
         #         try:
         #             # Author (from "From @username")
@@ -734,7 +725,7 @@ def extract_tweet_data(tweet_elem, logger: Optional[logging.Logger] = None) -> O
         #             )
         #             if author_elems:
         #                 quote_tweet_data["quoted_author"] = author_elems[0].text.replace("From ", "")
-                    
+
         #             # Text content (try main text first, then card title as fallback)
         #             text_elems = quote_tweet_elements[0].find_elements(
         #                 By.CSS_SELECTOR, 'div[data-testid="tweetText"]'
@@ -747,14 +738,14 @@ def extract_tweet_data(tweet_elem, logger: Optional[logging.Logger] = None) -> O
         #                 )
         #                 if title_elems:
         #                     quote_tweet_data["quoted_text"] = title_elems[0].text
-                    
+
         #             # Link to original tweet
         #             link_elems = quote_tweet_elements[0].find_elements(
         #                 By.CSS_SELECTOR, 'a[role="link"]'
         #             )
         #             if link_elems:
         #                 quote_tweet_data["quoted_link"] = link_elems[0].get_attribute("href")
-                    
+
         #             # Only set quote_tweet if we found any data
         #             if quote_tweet_data:
         #                 quote_tweet = quote_tweet_data
@@ -776,31 +767,33 @@ def extract_tweet_data(tweet_elem, logger: Optional[logging.Logger] = None) -> O
         return None
 
 
-def find_paper_author_tweet(arxiv_code: str, logger: Optional[logging.Logger] = None) -> Optional[dict]:
+def find_paper_author_tweet(
+    arxiv_code: str, logger: Optional[logging.Logger] = None
+) -> Optional[dict]:
     """Find a tweet from a paper's author about their paper."""
     logger = logger or get_console_logger()
     logger.info(f"Searching for author tweet for {arxiv_code}")
-    
+
     # Get paper details
     paper_details = paper_db.load_arxiv(arxiv_code)
     paper_title = paper_details["title"].iloc[0]
     paper_authors = paper_details["authors"].iloc[0].split(", ")
-    
+
     # Initialize browser
-    browser = setup_browser(logger, headless=False)
+    browser = setup_browser(logger, headless=True)
     login_twitter(browser, logger)
     if not browser:
         logger.error("Failed to initialize browser")
         return None
-        
+
     # Search for paper title
-    search_url = f"https://twitter.com/search?q={paper_title}&src=typed_query&f=live"
+    search_url = f"https://twitter.com/search?q='{paper_title}'&src=typed_query&f=live"
     browser.get(search_url)
-    
+
     # Initialize variables
     tweets_checked = 0
     max_tweets_to_check = 100
-    
+
     while tweets_checked < max_tweets_to_check:
         WebDriverWait(browser, 30).until(
             EC.presence_of_element_located(
@@ -818,7 +811,7 @@ def find_paper_author_tweet(arxiv_code: str, logger: Optional[logging.Logger] = 
                 break
 
             tweet_data = extract_author_tweet_data(
-                tweet_elem, paper_title, paper_authors, logger
+                tweet_elem, paper_title, paper_authors
             )
             if tweet_data:
                 logger.info(f"Found author tweet from: {tweet_data['username']}")
@@ -845,19 +838,21 @@ def find_paper_author_tweet(arxiv_code: str, logger: Optional[logging.Logger] = 
     return None
 
 
-def collect_llm_tweets(logger: Optional[logging.Logger] = None, max_tweets: int = 50, batch_size: int = 100) -> Iterator[List[dict]]:
+def collect_llm_tweets(
+    logger: Optional[logging.Logger] = None, max_tweets: int = 50, batch_size: int = 100
+) -> Iterator[List[dict]]:
     """Collect tweets about LLMs from the Twitter home feed in batches."""
     logger = logger or get_console_logger()
     logger.info("Starting collection of LLM-related tweets")
 
-    browser = setup_browser(logger, headless=False)
+    browser = setup_browser(logger, headless=True)
     current_batch = []
     tweets_checked = 0
 
     ## Login and navigate to home.
     login_twitter(browser, logger)
     browser.get("https://twitter.com/home")
-    time.sleep(3) 
+    time.sleep(3)
 
     while tweets_checked < max_tweets:
         ## Wait for and get tweets.
@@ -879,8 +874,7 @@ def collect_llm_tweets(logger: Optional[logging.Logger] = None, max_tweets: int 
             tweet_data = extract_tweet_data(tweet_elem, logger)
             if tweet_data:
                 relevance_info = vs.assess_llm_relevance(
-                    tweet_text=tweet_data["text"],
-                    model="gemini/gemini-2.0-flash"
+                    tweet_text=tweet_data["text"], model="gemini/gemini-2.0-flash"
                 )
                 tweet_data["arxiv_code"] = relevance_info.arxiv_code
                 if relevance_info.is_llm_related:
@@ -888,7 +882,7 @@ def collect_llm_tweets(logger: Optional[logging.Logger] = None, max_tweets: int 
                         f"Found relevant tweet from: {tweet_data['username']} ({tweets_checked}/{max_tweets} tweets processed)"
                     )
                     current_batch.append(tweet_data)
-                    
+
                     # Yield batch when it reaches the specified size
                     if len(current_batch) >= batch_size:
                         yield current_batch
@@ -896,9 +890,7 @@ def collect_llm_tweets(logger: Optional[logging.Logger] = None, max_tweets: int 
 
         ## Log progress every 10 tweets.
         if tweets_checked % 10 == 0:
-            logger.info(
-                f"Progress: {tweets_checked}/{max_tweets} tweets processed"
-            )
+            logger.info(f"Progress: {tweets_checked}/{max_tweets} tweets processed")
 
         ## Scroll and check progress.
         last_height = browser.execute_script(
@@ -920,9 +912,7 @@ def collect_llm_tweets(logger: Optional[logging.Logger] = None, max_tweets: int 
         if current_batch:
             yield current_batch
 
-        logger.info(
-            f"Checked {tweets_checked} tweets"
-        )
+        logger.info(f"Checked {tweets_checked} tweets")
 
     browser.quit()
 
@@ -940,16 +930,16 @@ def verify_tweet_structure(
         # Basic validation for all tweet threads
         if not thread.tweets:
             return False, "Tweet thread has no tweets"
-            
+
         # Check for duplicate positions
         positions = [t.position for t in thread.tweets]
         if len(positions) != len(set(positions)):
             return False, "Tweet thread has duplicate positions"
-            
+
         # If no config provided, just do basic validation
         if not config:
             return True, "Basic tweet structure verified successfully"
-            
+
         # Check number of tweets against config
         if len(thread.tweets) != len(config.tweets):
             return (
@@ -985,26 +975,28 @@ def verify_tweet_structure(
         return False, f"Error verifying thread structure: {str(e)}"
 
 
-def verify_tweet_content(tweet: Tweet, config: Optional[TweetConfig] = None) -> Tuple[bool, str]:
+def verify_tweet_content(
+    tweet: Tweet, config: Optional[TweetConfig] = None
+) -> Tuple[bool, str]:
     """Verify a single tweet's content against its configuration."""
     try:
         # Basic validation for all tweets
         if not tweet.content:
             return False, "Tweet has no content"
-        
+
         # Verify image paths exist if any
         if tweet.images:
             for idx, image_path in enumerate(tweet.images):
                 if not os.path.exists(image_path):
                     return False, f"Image {idx+1} not found: {image_path}"
-        
+
         # If no config provided, just do basic validation
         if not config:
             return True, "Basic tweet content verified successfully"
-            
+
         # Check for required URLs in link tweets if this is a links tweet
-        if config.content.content_type == "function" and "generate_links_content" in config.content.content:
-            required_urls = ["arxiv.org", "llmpedia.streamlit.app"]
+        if config.generator == "links":
+            required_urls = ["arxiv.org", "llmpedia.ai"]
             for url in required_urls:
                 if url not in tweet.content:
                     return False, f"Missing required URL {url} in links tweet"
@@ -1103,7 +1095,10 @@ def verify_tweet_thread(
         # Skip UI verification if no driver provided
         if not driver:
             logger.info("Skipping UI verification (no driver provided)")
-            return True, "Tweet thread content verified successfully (no UI verification)"
+            return (
+                True,
+                "Tweet thread content verified successfully (no UI verification)",
+            )
 
         # Verify UI elements with retry
         for tweet_idx, tweet in enumerate(thread.tweets):
@@ -1152,26 +1147,9 @@ def send_tweet2(
     config: Optional[TweetThreadConfig] = None,
     headless: bool = True,
 ) -> bool:
-    """Send a tweet or tweet thread.
-    
-    This function supports both TweetThread objects and simple string tweets.
-    
-    Args:
-        tweet_content: Either a TweetThread object or a string with tweet content
-        logger: Optional logger for tracking progress
-        verify: Whether to verify tweet content before sending
-        tweet_image_path: Optional image path (for simple string tweets only)
-        tweet_page_path: Optional second image path (for simple string tweets only)
-        analyzed_image_path: Optional analyzed image path (for simple string tweets only)
-        author_tweet: Optional author tweet data (for simple string tweets only)
-        config: Optional configuration for verification
-        headless: Whether to run the browser in headless mode
-        
-    Returns:
-        bool: Whether the tweet(s) were sent successfully
-    """
+    """Send a tweet or tweet thread."""
     logger = logger or get_console_logger()
-    
+
     # Convert string tweet to TweetThread if needed
     if isinstance(tweet_content, str):
         images = []
@@ -1179,7 +1157,7 @@ def send_tweet2(
             images.append(tweet_image_path)
         if tweet_page_path:
             images.append(tweet_page_path)
-            
+
         # Create a simple tweet thread
         tweet_thread = TweetThread.create_simple_tweet(
             content=tweet_content,
@@ -1187,27 +1165,19 @@ def send_tweet2(
             tweet_type="simple",
             metadata={
                 "analyzed_image_path": analyzed_image_path,
-                "author_tweet": author_tweet
-            }
+                "author_tweet": author_tweet,
+            },
         )
     else:
         tweet_thread = tweet_content
-    
+
     logger.info(f"Starting to send tweet thread of type: {tweet_thread.tweet_type}")
-    
+
     try:
         # Setup browser and login
         driver = setup_browser(logger, headless=headless)
         login_twitter(driver, logger)
-        
-        # Verify thread if requested
-        if verify:
-            logger.info("Verifying tweet thread before sending")
-            success, msg = verify_tweet_thread(tweet_thread, config, driver, logger)
-            if not success:
-                logger.error(f"Tweet thread verification failed: {msg}")
-                return False
-        
+
         # Start new tweet
         logger.info("Starting new tweet thread")
         tweet_button = WebDriverWait(driver, 60).until(
@@ -1215,11 +1185,11 @@ def send_tweet2(
         )
         tweet_button.click()
         time.sleep(2)  # Give UI time to stabilize
-        
+
         # Process each tweet in the thread
         for i, tweet_data in enumerate(tweet_thread.tweets):
             logger.info(f"Processing tweet {i+1}/{len(tweet_thread.tweets)}")
-            
+
             try:
                 # If not first tweet, add new tweet to thread
                 if i > 0:
@@ -1231,7 +1201,7 @@ def send_tweet2(
                     )
                     tweet_reply_btn.click()
                     time.sleep(2)  # Give UI time to stabilize
-                
+
                 # Find and enter tweet content
                 # More robust textarea selection using multiple possible selectors
                 textarea_selectors = [
@@ -1239,7 +1209,7 @@ def send_tweet2(
                     "//div[@contenteditable='true' and @role='textbox']",
                     "//div[@data-testid='tweetTextarea_0']",  # Fallback for first tweet
                 ]
-                
+
                 tweet_box = None
                 for selector in textarea_selectors:
                     try:
@@ -1249,13 +1219,13 @@ def send_tweet2(
                         break
                     except:
                         continue
-                
+
                 if not tweet_box:
                     raise Exception("Could not find tweet textarea")
-                
+
                 tweet_box.send_keys(tweet_data.content)
                 time.sleep(1)  # Let content settle
-                
+
                 # Handle images if present
                 if tweet_data.images:
                     logger.info(
@@ -1266,17 +1236,17 @@ def send_tweet2(
                             By.XPATH,
                             '//input[@accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime"]',
                         )
-                        
+
                         for idx, image_path in enumerate(tweet_data.images, 1):
                             if not os.path.exists(image_path):
                                 logger.warning(f"Image not found: {image_path}")
                                 continue
-                            
+
                             logger.info(
                                 f"Uploading image {idx}/{len(tweet_data.images)}: {image_path}"
                             )
                             upload_input.send_keys(image_path)
-                            
+
                             # Wait for upload with timeout
                             try:
                                 WebDriverWait(driver, 60).until(
@@ -1290,24 +1260,26 @@ def send_tweet2(
                             except Exception as e:
                                 logger.error(f"Failed to upload image {idx}: {str(e)}")
                                 return False
-                    
+
                     except Exception as e:
                         logger.error(f"Error handling images: {str(e)}")
                         return False
-            
+
             except Exception as e:
                 logger.error(f"Error processing tweet {i+1}: {str(e)}")
                 return False
-        
+
         # Handle analyzed image if provided (for simple tweets)
         if isinstance(tweet_content, str) and analyzed_image_path:
             time.sleep(2)
             logger.info("Adding image tweet")
             tweet_reply_btn = WebDriverWait(driver, 60).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[@data-testid='addButton']"))
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//button[@data-testid='addButton']")
+                )
             )
             tweet_reply_btn.click()
-            
+
             # Enter image tweet content
             tweet_box = WebDriverWait(driver, 60).until(
                 EC.element_to_be_clickable(
@@ -1318,29 +1290,31 @@ def send_tweet2(
                 )
             )
             tweet_box.send_keys("Key visualization from the paper 📊")
-            
+
             # Upload image
             upload_input = driver.find_element(
                 By.XPATH,
                 '//input[@accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime"]',
             )
             upload_input.send_keys(analyzed_image_path)
-            
+
             # Verify image is uploaded
             WebDriverWait(driver, 60).until(
                 EC.presence_of_element_located(
                     (By.XPATH, "(//button[@aria-label='Remove media'])[1]")
                 )
             )
-        
+
         # Handle author tweet if provided (for simple tweets)
         if isinstance(tweet_content, str) and author_tweet:
             tweet_idx = 2 if analyzed_image_path else 1
             tweet_reply_btn = WebDriverWait(driver, 60).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[@data-testid='addButton']"))
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//button[@data-testid='addButton']")
+                )
             )
             tweet_reply_btn.click()
-            
+
             tweet_box = WebDriverWait(driver, 60).until(
                 EC.element_to_be_clickable(
                     (
@@ -1350,7 +1324,7 @@ def send_tweet2(
                 )
             )
             tweet_box.send_keys(f"related discussion: {author_tweet['link']}")
-        
+
         # Send the complete thread
         logger.info("Preparing to send tweet thread")
         try:
@@ -1362,23 +1336,31 @@ def send_tweet2(
                     )
                 )
             )
-            
+
+            # Verify thread if requested
+            if verify:
+                logger.info("Verifying tweet thread before sending")
+                success, msg = verify_tweet_thread(tweet_thread, config, driver, logger)
+                if not success:
+                    logger.error(f"Tweet thread verification failed: {msg}")
+                    return False
+
             # Visual confirmation and final send
             time.sleep(5)  # Final verification pause
             tweet_all_button.click()
             time.sleep(5)  # Wait for send to complete
-            
+
             logger.info("Tweet thread sent successfully")
             return True
-        
+
         except Exception as e:
             logger.error(f"Error sending tweet thread: {str(e)}")
             return False
-    
+
     except Exception as e:
         logger.error(f"Unexpected error in send_tweet2: {str(e)}")
         return False
-    
+
     finally:
         if "driver" in locals():
             driver.quit()

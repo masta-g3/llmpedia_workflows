@@ -1,24 +1,10 @@
-# Tweet Types Configuration
-# This file defines the structure and generation rules for different types of tweet threads
-
 # Selection weights for random tweet type selection
-# You can define multiple weight sets for different scenarios
-# Each weight set is a dictionary mapping tweet type names to their selection weights
-# The weights don't need to sum to 1, they will be normalized automatically
 selection:
-  # Default weights used for standard operation
   default_weights:
-    punchline: 0.8    # 70% chance of selecting punchline tweets
-    insight_v5: 0.2   # 30% chance of selecting insight tweets
-    fable: 0.0        # 0% chance of selecting fable tweets (effectively disabled)
+    punchline: 0.85
+    insight_v5: 0.15
+    fable: 0.0
   
-  # Example of an alternative weight set that could be used for special occasions
-  # Uncomment and modify as needed
-  # special_occasion:
-  #   punchline: 0.4
-  #   insight_v5: 0.3
-  #   fable: 0.3
-
 # Tweet type definitions
 tweet_types:
   insight_v5:
@@ -27,22 +13,11 @@ tweet_types:
     weight: 0.3  # Selection weight for this tweet type (used if no weight set is specified)
     tweets:
       - position: 0
-        content:
-          content_type: "function"
-          content: "generate_insight_content"
-          description: "Main insight about the paper"
-        images:
-          - source_type: "function"
-            source: "get_art_image"
-            description: "Paper art image"
-          - source_type: "function"
-            source: "get_first_page"
-            description: "Paper first page"
+        generator: insight # Generates insight text + art image
       - position: 1
-        content:
-          content_type: "function"
-          content: "generate_links_content"
-          description: "Links to paper and resources"
+        generator: author # Generates author text
+      - position: 2
+        generator: links # Generates links text
   
   punchline:
     name: "Punchline Tweet"
@@ -50,19 +25,27 @@ tweet_types:
     weight: 0.7  # Selection weight for this tweet type (used if no weight set is specified)
     tweets:
       - position: 0
-        content:
-          content_type: "function"
-          content: "generate_punchline_content"
-          description: "Paper punchline"
-        images:
-          - source_type: "function"
-            source: "select_punchline_image"
-            description: "Selected figure from paper"
+        # content:
+        #   content_type: "function"
+        #   content: "generate_punchline_content"
+        #   description: "Paper punchline"
+        # images:
+        #   - source_type: "function"
+        #     source: "select_punchline_image"
+        #     description: "Selected figure from paper"
+        generator: punchline # Use the combined generator
       - position: 1
-        content:
-          content_type: "function"
-          content: "generate_links_content"
-          description: "Links to paper and resources"
+        # content:
+        #   content_type: "function"
+        #   content: "generate_author_tweet"
+        #   description: "Author related discussion"
+        generator: author # Use the author generator
+      - position: 2
+        # content:
+        #   content_type: "function"
+        #   content: "generate_links_content"
+        #   description: "Links to paper and resources"
+        generator: links # Use the links generator
 
   fable:
     name: "Fable Tweet"
