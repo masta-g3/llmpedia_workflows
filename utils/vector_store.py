@@ -1011,6 +1011,68 @@ def analyze_tweet_patterns(
     return response
 
 
+def analyze_reddit_patterns(
+    reddit_content: str,
+    subreddit: str,
+    previous_entries: str,
+    model: str = "claude-3-5-sonnet-20241022",
+    temperature: float = 1,
+    start_date: str = None,
+    end_date: str = None,
+) -> str:
+    """Analyze patterns and insights from Reddit community discussions."""
+    response = run_instructor_query(
+        ps.REDDIT_ANALYSIS_SYSTEM_PROMPT,
+        ps.REDDIT_ANALYSIS_USER_PROMPT.format(
+            base_style=ps.TWEET_BASE_STYLE,  # Reuse the same style guide
+            subreddit=subreddit,
+            content=reddit_content,
+            start_date=start_date,
+            end_date=end_date,
+            previous_entries=previous_entries,
+        ),
+        llm_model=model,
+        temperature=temperature,
+        process_id="analyze_reddit_patterns",
+        thinking={"type": "enabled", "budget_tokens": 2048},
+    )
+
+    ## Extract the response from the XML elements from the string
+    response = response.split("<response>")[1].split("</response>")[0]
+
+    return response
+
+
+def analyze_cross_subreddit_patterns(
+    multi_subreddit_content: str,
+    previous_entries: str,
+    model: str = "claude-3-5-sonnet-20241022",
+    temperature: float = 1,
+    start_date: str = None,
+    end_date: str = None,
+) -> str:
+    """Analyze patterns and insights across multiple Reddit communities."""
+    response = run_instructor_query(
+        ps.REDDIT_ANALYSIS_SYSTEM_PROMPT,
+        ps.CROSS_SUBREDDIT_ANALYSIS_PROMPT.format(
+            base_style=ps.TWEET_BASE_STYLE,  # Reuse the same style guide
+            content=multi_subreddit_content,
+            start_date=start_date,
+            end_date=end_date,
+            previous_entries=previous_entries,
+        ),
+        llm_model=model,
+        temperature=temperature,
+        process_id="analyze_cross_subreddit_patterns",
+        thinking={"type": "enabled", "budget_tokens": 2048},
+    )
+
+    ## Extract the response from the XML elements from the string
+    response = response.split("<response>")[1].split("</response>")[0]
+
+    return response
+
+
 def summarize_full_document(
     paper_title: str,
     document: str,

@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS llm_tweets (
     has_media BOOLEAN DEFAULT FALSE,
     is_verified BOOLEAN DEFAULT FALSE,
     processed BOOLEAN DEFAULT FALSE,  -- Flag for processing status
+    arxiv_code TEXT,  -- Extracted arxiv code if any
     metadata JSONB  -- For storing any additional extracted metadata
 );
 
