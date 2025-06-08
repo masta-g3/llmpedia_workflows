@@ -7,6 +7,9 @@ set +a
 
 export PROJECT_PATH=${PROJECT_PATH:-$(pwd)}
 
+## Source common bash utilities
+source "${PROJECT_PATH}/utils/bash_utils.sh"
+
 while true; do
     ## Create timestamped log file.
     TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
@@ -31,24 +34,9 @@ while true; do
     python "executors/d2_post_analysis.py" 2>&1 | tee -a "$LOG_FILE"
     
     echo "Tweet collection completed at $(date)" | tee -a "$LOG_FILE"
-    echo "Sleeping for ${sleep_minutes} minutes..." | tee -a "$LOG_FILE"
     
-    ## Progress bar during sleep.
-    for ((i=0; i<=$total_seconds; i++)); do
-        ## Calculate percentages and counts.
-        pct=$((i * 100 / total_seconds))
-        filled=$((pct / 2))
-        unfilled=$((50 - filled))
-        
-        ## Create the progress bar.
-        printf "\r["
-        printf "%${filled}s" '' | tr ' ' '#'
-        printf "%${unfilled}s" '' | tr ' ' '-'
-        printf "] %d%% (%dm %ds/%dm)" $pct $((i / 60)) $((i % 60)) $sleep_minutes
-        
-        sleep 1
-    done
-    printf "\n"
+    ## Use common utility for sleep with progress bar
+    sleep_with_progress $total_seconds "Sleeping"
     
     echo "Waking up after ${sleep_minutes} minute sleep..." | tee -a "$LOG_FILE"
 done 

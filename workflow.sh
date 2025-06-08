@@ -7,31 +7,14 @@ set +a
 
 export PROJECT_PATH=${PROJECT_PATH:-$(pwd)}
 
-function show_progress() {
-    local elapsed=$1
-    local total=$2
-    local pct=$((elapsed * 100 / total))
-    local filled=$((pct / 2))
-    local unfilled=$((50 - filled))
-    
-    printf "\r["
-    printf "%${filled}s" '' | tr ' ' '#'
-    printf "%${unfilled}s" '' | tr ' ' '-'
-    printf "] %d%% (%dm %ds/%dm)" $pct $((elapsed / 60)) $((elapsed % 60)) $((total / 60))
-}
+## Source common bash utilities
+source "${PROJECT_PATH}/utils/bash_utils.sh"
 
-function sleep_with_progress() {
+function sleep_random_minutes() {
     local minutes=$1
     local total_seconds=$((minutes * 60))
     
-    echo "Sleeping for ${minutes} minutes..." | tee -a "$LOG_FILE"
-    
-    for ((i=0; i<=$total_seconds; i++)); do
-        show_progress $i $total_seconds
-        sleep 1
-    done
-    printf "\n"
-    
+    sleep_with_progress $total_seconds "Sleeping"
     echo "Waking up after ${minutes} minute sleep..." | tee -a "$LOG_FILE"
 }
 
@@ -124,5 +107,5 @@ while true; do
     echo "Starting next cycle..."
 
     sleep_minutes=$(( (RANDOM % 91) + 90 ))
-    sleep_with_progress $sleep_minutes
+    sleep_random_minutes $sleep_minutes
 done
