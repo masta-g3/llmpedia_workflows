@@ -7,70 +7,11 @@ set +a
 
 PROJECT_PATH=${PROJECT_PATH:-.}
 
-function show_progress() {
-    local elapsed=$1
-    local total=$2
-    local pct=$((elapsed * 100 / total))
-    local filled=$((pct / 2))
-    local unfilled=$((50 - filled))
-    
-    printf "\r["
-    printf "%${filled}s" '' | tr ' ' '#'
-    printf "%${unfilled}s" '' | tr ' ' '-'
-    printf "] %d%% (%dm %ds/%dm)" $pct $((elapsed / 60)) $((elapsed % 60)) $((total / 60))
-}
+## Source common bash utilities
+source "${PROJECT_PATH}/utils/bash_utils.sh"
 
 function sleep_until_wednesday() {
-    ## Get current time in seconds since epoch.
-    current_time=$(date +%s)
-    
-    ## Get current day of week (1=Monday, ..., 3=Wednesday, ..., 7=Sunday)
-    current_day=$(date +%u)
-    
-    ## Calculate target time (3:00 PM PST/PDT) for next Wednesday.
-    local target_hour=15 # 3 PM
-    local target_day=3   # Wednesday
-    
-    if [ "$current_day" -eq "$target_day" ]; then
-        ## If today is Wednesday, calculate target for 3 PM today.
-        target_time_today=$(TZ=PST8PDT date -v${target_hour}H -v00M -v00S +%s)
-        if [ "$current_time" -lt "$target_time_today" ]; then
-            ## If it's before 3 PM today, set target to today.
-            target_time=$target_time_today
-        else
-            ## If it's past 3 PM today, set target to next Wednesday.
-            target_time=$(TZ=PST8PDT date -v+7d -v${target_hour}H -v00M -v00S +%s)
-        fi
-    else
-        ## If today is not Wednesday, calculate days until next Wednesday.
-        if [ "$current_day" -lt "$target_day" ]; then
-            days_until_target=$(($target_day - $current_day))
-        else # current_day > target_day (Thu, Fri, Sat, Sun)
-            days_until_target=$(($target_day - $current_day + 7))
-        fi
-        
-        ## Set target to next Wednesday at 3:00 PM.
-        target_time=$(TZ=PST8PDT date -v+${days_until_target}d -v${target_hour}H -v00M -v00S +%s)
-    fi
-    
-    ## Calculate seconds until target.
-    seconds_to_wait=$((target_time - current_time))
-    
-    ## Ensure wait time is non-negative (edge case if clock changes)
-    if [ "$seconds_to_wait" -lt 0 ]; then
-        seconds_to_wait=0
-    fi
-    
-    echo "Waiting until next Wednesday at 3:00 PM PST/PDT..." | tee -a "$LOG_FILE"
-    echo "Current time: $(date)" | tee -a "$LOG_FILE"
-    echo "Target time: $(date -r $target_time)" | tee -a "$LOG_FILE"
-    
-    ## Show progress bar while waiting.
-    for ((i=0; i<=$seconds_to_wait; i++)); do
-        show_progress $i $seconds_to_wait
-        sleep 1
-    done
-    printf "\n"
+    sleep_until_weekly_time 3 15 0 "Weekly Review"  ## Wednesday (3), 3:00 PM (15:00)
 }
 
 function get_previous_monday_date() {

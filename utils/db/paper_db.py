@@ -3,6 +3,7 @@
 from typing import Optional, Union, Dict, List, Tuple
 from datetime import datetime
 import pandas as pd
+import re
 
 from .db_utils import (
     execute_read_query,
@@ -235,7 +236,8 @@ def check_weekly_summary_exists(date_str: str) -> bool:
 def get_extended_notes(
     arxiv_code: str, 
     level: Optional[int] = None, 
-    expected_tokens: Optional[int] = None
+    expected_tokens: Optional[int] = None,
+    clean_summary: bool = True
 ) -> Optional[str]:
     """Get extended summary for a given arxiv code."""
     if level is not None:
@@ -263,8 +265,12 @@ def get_extended_notes(
             select_cols=["summary"],
             limit=1
         )
+
+    summary = df["summary"].iloc[0] if not df.empty else None
+    if summary is not None and clean_summary:
+        summary = re.sub(r'<new>|</new>|<original>|</original>', '', summary)
     
-    return df["summary"].iloc[0] if not df.empty else None
+    return summary
 
 def get_arxiv_parent_chunk_ids(chunk_ids: List[Tuple[str, int]]) -> List[Tuple[str, int]]:
     """Get parent chunk IDs for a list of (arxiv_code, child_id) tuples."""

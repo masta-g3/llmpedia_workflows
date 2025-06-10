@@ -148,6 +148,78 @@ FROM: {start_date} TO: {end_date}
 
 
 ##################
+## REDDIT ANALYSIS ##
+##################
+
+REDDIT_ANALYSIS_SYSTEM_PROMPT = "You are a dedicated AI researcher who monitors Reddit communities to track emerging trends and discussions in the Large Language Model ecosystem. You keep detailed logs of community insights, focusing on technical developments, user experiences, and evolving perspectives."
+
+REDDIT_ANALYSIS_USER_PROMPT = """
+<guidelines>
+- Carefully analyze the following Reddit posts and comments to identify the main themes discussed.
+- Weight posts by their engagement (score + comment count) during your analysis.
+- Focus on technical discussions, user experiences, and community sentiment.
+- If any specific tools, models, or papers are mentioned prominently, be sure to note them.
+- Pay attention to questions, problems, and solutions being discussed.
+</guidelines>
+
+<style_guide>
+{base_style}
+</style_guide>
+
+<previous_log_entries>
+{previous_entries}</previous_log_entries>
+
+<reddit_content>
+SUBREDDIT: r/{subreddit}
+FROM: {start_date} TO: {end_date}
+{content}</reddit_content>
+
+<response_format>
+- Provide your response inside an XML tag <response>.
+- <response> should contain your final response: a single (1), comprehensive paragraph where you identify and discuss the top themes (up to 3) discussed in r/{subreddit}, along with any tools, models, or papers mentioned.
+- Consider the previous entries in your log, so that your response builds upon previous entries and follows a consistent narrative.
+- Avoid being repetitive as compared to your previous entries. If the same themes are repeated, try to find ways the discussion is evolving.
+- Be honest and factual but with an engaging analytical voice that captures the essence of community discussions.
+- Focus on insights that would be valuable to AI researchers and practitioners.
+</response_format>
+"""
+
+CROSS_SUBREDDIT_ANALYSIS_PROMPT = """
+<guidelines>
+- Analyze and compare discussions across multiple LLM-focused subreddit communities.
+- Weight posts by their engagement (score + comment count) during your analysis.
+- Focus on both shared trends AND community-specific characteristics.
+- Identify cross-pollination of ideas and topics appearing in multiple communities.
+- Note community-specific language, terminology, and expertise levels.
+- Pay attention to how different communities approach similar topics.
+</guidelines>
+
+<style_guide>
+{base_style}
+</style_guide>
+
+<previous_log_entries>
+{previous_entries}</previous_log_entries>
+
+<multi_subreddit_content>
+FROM: {start_date} TO: {end_date}
+{content}</multi_subreddit_content>
+
+<response_format>
+- Provide your response inside an XML tag <response>.
+- <response> should contain your final response: a single (1), comprehensive paragraph that weaves together the main topics discussed across the Reddit communities in a flowing analytical narrative.
+- Include engagement metrics in parentheses (e.g., "150+ upvotes", "50+ comments") when discussing high-engagement posts.
+- Explicitly identify which topics are shared across multiple subreddits vs. specific to particular communities (e.g., "while r/LocalLLaMA focuses on...", "discussions spanning r/ChatGPT and r/OpenAI reveal...").
+- Connect different topics and communities in a cohesive narrative that captures the broader LLM ecosystem conversation.
+- Mention specific tools, models, papers, and technical developments being discussed.
+- Consider the previous entries in your log, so that your response builds upon previous entries and follows a consistent narrative.
+- Use an engaging analytical voice that captures ecosystem-wide trends while highlighting community-specific insights.
+- Focus on unique cross-community value that wouldn't be apparent from individual subreddit analysis alone.
+</response_format>
+"""
+
+
+##################
 ## VECTOR STORE ##
 ##################
 

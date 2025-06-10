@@ -125,7 +125,7 @@ def scrape_rsrch_space_papers(start_date, end_date=None):
     driver.quit()
 
     entries = soup.find_all(
-        "a", class_="flex justify-between text-secondary py-1 group text-md"
+        "a", class_="text-secondary text-md group flex justify-between py-1"
     )
     for entry in entries:
         date_str = entry.find("p", class_="font-berkeley").text.strip()
@@ -185,33 +185,49 @@ def scrape_llm_research_papers():
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
+    
+    ## Helper function to extract papers from a list of links
+    def extract_papers_from_links(paper_links):
+        papers = []
+        for link in paper_links:
+            time.sleep(1)  # To avoid overwhelming the server
+            paper_url = "https://www.llmsresearch.com" + link['href']
+            paper_response = requests.get(paper_url, headers=headers)
+            paper_soup = BeautifulSoup(paper_response.content, "html.parser")
+            
+            arxiv_links = paper_soup.find_all("a", class_="link", href=lambda href: href and "arxiv.org/abs" in href)
+            
+            for arxiv_link in arxiv_links:
+                href = arxiv_link['href']
+                arxiv_code = href.split("/")[-1].split("?")[0].split("v")[0]  # Extract code and remove version
+                title = arxiv_link.get_text(strip=True)
+                papers.append({"arxiv_code": arxiv_code, "title": title})
+        
+        return papers
+    
+    all_papers = []
+    
+    ## First scrape the main page
     response = requests.get("https://www.llmsresearch.com", headers=headers)
     soup = BeautifulSoup(response.content, "html.parser")
-    hyperlinks = soup.find_all("a", href=lambda href: href and href.startswith("/p/summary"))
-    df = pd.DataFrame(columns=["arxiv_code", "title"])
+    hyperlinks = soup.find_all("a", href=lambda href: href and href.startswith("/p/"))
+    all_papers.extend(extract_papers_from_links(hyperlinks))
     
-    for link in hyperlinks:
-        time.sleep(1)  # To avoid overwhelming the server
-        paper_url = "https://www.llmsresearch.com" + link['href']
-        paper_response = requests.get(paper_url, headers=headers)
-        paper_soup = BeautifulSoup(paper_response.content, "html.parser")
+    ## Then scrape archive pages 2-10
+    # for page in range(2, 11):
+    #     time.sleep(1)
+    #     archive_url = f"https://www.llmsresearch.com/archive?page={page}"
+    #     logger.info(f"Scraping LLM Research archive page {page}...")
         
-        arxiv_links = paper_soup.find_all("a", class_="link", href=lambda href: href and "arxiv.org/abs" in href)
-        
-        for arxiv_link in arxiv_links:
-            href = arxiv_link['href']
-            arxiv_code = href.split("/")[-1].split("?")[0].split("v")[0]  # Extract code and remove version
-            title = arxiv_link.get_text(strip=True)
-            
-            df = df._append(
-                {"arxiv_code": arxiv_code, "title": title},
-                ignore_index=True
-            )
+    #     archive_response = requests.get(archive_url, headers=headers)
+    #     archive_soup = BeautifulSoup(archive_response.content, "html.parser")
+    #     archive_links = archive_soup.find_all("a", href=lambda href: href and href.startswith("/p/"))
+    #     all_papers.extend(extract_papers_from_links(archive_links))
     
+    ## Create DataFrame from collected papers
+    df = pd.DataFrame(all_papers)
     df.drop_duplicates(subset="arxiv_code", keep="first", inplace=True)
     return df
-    
-    
 
 def scrape_emergentmind_papers():
     url = "https://www.emergentmind.com/feeds/rss"

@@ -5,13 +5,20 @@ import base64
 import requests
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import tiktoken
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Dict
 
 import utils.prompts as ps
 import utils.pydantic_objects as po
 import utils.app_utils as au
 import utils.db.paper_db as paper_db
-from utils.instruct import run_instructor_query, format_vision_messages
+from utils.instruct import run_instructor_query, format_vision_messages, add_cache_control
+from utils.prompts import (
+    TWEET_SYSTEM_PROMPT,
+    TWEET_BASE_STYLE,
+    SELECT_BEST_PENDING_TWEET_USER_PROMPT,
+    PAPER_SUMMARIZATION_AND_FACTS_SYSTEM_PROMPT,
+    FACT_EXTRACTION_TASK_INSTRUCTION
+)
 
 token_encoder = tiktoken.encoding_for_model("gpt-3.5-turbo")
 
@@ -154,13 +161,13 @@ def summarize_doc_chunk_mlx(paper_title: str, document: str, mlx_model, mlx_toke
     return summary
 
 
-def verify_llm_paper(paper_content: str, model="gpt-4o"):
+def verify_llm_paper(paper_content: str, llm_model="gpt-4o"):
     """Verify if a paper is about LLMs."""
     is_llm_paper = run_instructor_query(
         ps.LLM_VERIFIER_SYSTEM_PROMPT,
         ps.LLM_VERIFIER_USER_PROMPT.format(paper_content=paper_content),
         model=po.LLMVerifier,
-        llm_model=model,
+        llm_model=llm_model,
         process_id="verify_llm_paper",
     )
     is_llm_paper = is_llm_paper.dict()
@@ -189,8 +196,7 @@ def convert_notes_to_narrative(
         llm_model=model,
         process_id="convert_notes_to_narrative",
     )
-    if "<summary>" in narrative:
-        narrative = narrative.split("<summary>")[1].split("</summary>")[0]
+    narrative = narrative.split("<summary>")[1].split("</summary>")[0]
     return narrative
 
 
@@ -223,10 +229,9 @@ def copywrite_summary(paper_title, previous_notes, narrative, model="GPT-3.5-Tur
         llm_model=model,
         process_id="copywrite_summary",
     )
-    if "<improved_summary>" in copywritten:
-        copywritten = copywritten.split("<improved_summary>")[1].split(
-            "</improved_summary>"
-        )[0]
+    copywritten = copywritten.split("<improved_summary>")[1].split(
+        "</improved_summary>"
+    )[0]
     return copywritten
 
 
@@ -267,13 +272,17 @@ def rephrase_title(title, model="gpt-4o"):
 
 
 def generate_weekly_report(
-    weekly_content_md: str, llm_model="claude-3-5-sonnet-20250222"
+    weekly_content_md: str,
+    tweet_analysis_md: str = "",
+    llm_model="claude-3-5-sonnet-20250222"
 ):
     """Generate weekly report."""
     weekly_report = run_instructor_query(
         ps.WEEKLY_SYSTEM_PROMPT,
         ps.WEEKLY_USER_PROMPT.format(
-            weekly_content=weekly_content_md, base_style_guidelines=ps.TWEET_BASE_STYLE
+            weekly_content=weekly_content_md,
+            tweet_analysis=tweet_analysis_md,
+            base_style_guidelines=ps.TWEET_BASE_STYLE,
         ),
         # model=po.WeeklyReview,
         llm_model=llm_model,
@@ -291,7 +300,9 @@ def generate_weekly_highlight(
     """Generate weekly highlight."""
     weekly_highlight = run_instructor_query(
         ps.WEEKLY_SYSTEM_PROMPT,
-        ps.WEEKLY_HIGHLIGHT_USER_PROMPT.format(weekly_content=weekly_content_md),
+        ps.WEEKLY_HIGHLIGHT_USER_PROMPT.format(
+            weekly_content=weekly_content_md, base_style_guidelines=ps.TWEET_BASE_STYLE
+        ),
         llm_model=llm_model,
         temperature=0.5,
         process_id="generate_weekly_highlight",
@@ -299,12 +310,12 @@ def generate_weekly_highlight(
     return weekly_highlight
 
 
-def extract_document_repo(paper_content: str, model="gpt-4o"):
+def extract_document_repo(paper_content: str, llm_model="gpt-4o"):
     """Extract weekly repos."""
     weekly_repos = run_instructor_query(
         ps.REPO_EXTRACTOR_SYSTEM_PROMPT,
         ps.REPO_EXTRACTOR_USER_PROMPT.format(content=paper_content),
-        llm_model=model,
+        llm_model=llm_model,
         model=po.ExternalResources,
         temperature=0.0,
         process_id="extract_document_repo",
@@ -314,7 +325,7 @@ def extract_document_repo(paper_content: str, model="gpt-4o"):
 
 def select_most_interesting_paper(
     arxiv_abstracts: str,
-    model: str = "claude-3-5-sonnet-20241022",
+    llm_model: str = "claude-3-5-sonnet-20241022",
 ) -> str:
     """Select the most interesting paper from a list of candidates."""
     ## Set the abstracts on the model class for validation.
@@ -324,7 +335,7 @@ def select_most_interesting_paper(
         ps.INTERESTING_SYSTEM_PROMPT,
         ps.INTERESTING_USER_PROMPT.format(abstracts=arxiv_abstracts),
         model=po.InterestingPaperSelection,
-        llm_model=model,
+        llm_model=llm_model,
         process_id="select_most_interesting_paper",
     )
 
@@ -332,6 +343,93 @@ def select_most_interesting_paper(
     delattr(po.InterestingPaperSelection, "_abstracts")
 
     return response.selected_arxiv_code
+
+
+def select_best_pending_tweet(
+    candidates: list[dict],
+    model: str = "claude-3-5-sonnet-20241022",
+    logger=None,
+    recent_posted_tweets: Optional[List[str]] = None,
+) -> Optional[int]:
+    """Select the best tweet from a list of pending candidates using an LLM."""
+    if not candidates:
+        if logger:
+            logger.warning("No candidates provided to select_best_pending_tweet.")
+        return None
+
+    candidate_list_str = "\n".join(
+        [
+            f"- ID: {c['id']}, Type: {c['tweet_type']}, First Tweet: \"{c['first_tweet_content']}\""
+            for c in candidates
+        ]
+    )
+    try:
+        prohibited_match = re.search(
+            r"<prohibited_phrases>(.*?)</prohibited_phrases>",
+            TWEET_BASE_STYLE,
+            re.DOTALL,
+        )
+        prohibited_phrases_str = (
+            prohibited_match.group(1).strip()
+            if prohibited_match
+            else "No prohibited phrases found."
+        )
+    except Exception as e:
+        if logger:
+            logger.warning(f"Could not extract prohibited phrases: {e}")
+        prohibited_phrases_str = "Error extracting prohibited phrases."
+
+    ## Format recent posts for the prompt
+    recent_posted_tweets_str = "No recent posts available."
+    if recent_posted_tweets:
+        recent_posted_tweets_str = "\n".join(
+            [f'- "{post}"' for post in recent_posted_tweets]
+        )
+
+    ## Format the user prompt
+    user_prompt = SELECT_BEST_PENDING_TWEET_USER_PROMPT.format(
+        candidate_list_str=candidate_list_str,
+        prohibited_phrases_str=prohibited_phrases_str,
+        recent_posted_tweets_str=recent_posted_tweets_str,
+    )
+
+    try:
+        response = run_instructor_query(
+            system_message=TWEET_SYSTEM_PROMPT,
+            user_message=user_prompt,
+            llm_model=model,
+            process_id="select_best_pending_tweet",
+            temperature=1,
+            thinking={"type": "enabled", "budget_tokens": 2048},
+        )
+
+        ## Parse the response
+        match = re.search(r"<selected_tweet_id>(\d+)</selected_tweet_id>", response)
+        if match:
+            selected_id = int(match.group(1))
+
+            ## Verify the selected ID exists in the candidates
+            if any(c["id"] == selected_id for c in candidates):
+                return selected_id
+            else:
+                if logger:
+                    logger.error(
+                        f"LLM returned an invalid ID ({selected_id}) not present in candidates."
+                    )
+                return None
+        else:
+            if logger:
+                logger.error(
+                    f"Could not parse selected_tweet_id from LLM response: {response}"
+                )
+            return None
+
+    except Exception as e:
+        if logger:
+            logger.error(
+                f"Error during LLM call for tweet selection: {e}", exc_info=True
+            )
+        return None
 
 
 def write_tweet(
@@ -422,6 +520,7 @@ def write_tweet_reply_academic(
     previous_posts: str,
     model: str = "claude-3-7-sonnet-20250219",
     temperature: float = 0.8,
+    **kwargs,
 ) -> str:
     """Write a reply tweet that connects papers with community discussions."""
     system_prompt = ps.TWEET_SYSTEM_PROMPT
@@ -438,7 +537,7 @@ def write_tweet_reply_academic(
         llm_model=model,
         temperature=temperature,
         process_id="write_tweet_reply_academic",
-        thinking={"type": "enabled", "budget_tokens": 2048},
+        **kwargs,
     )
     return response
 
@@ -516,7 +615,10 @@ def write_weekly_review_post(
         llm_model=llm_model,
         temperature=temperature,
         process_id="write_weekly_review_post",
+        thinking={"type": "enabled", "budget_tokens": 2048},
     )
+
+    response = response.split("<tweet>")[1].split("</tweet>")[0].strip()
     return response
 
 
@@ -556,25 +658,14 @@ def write_fable(
     user_prompt = ps.TWEET_FABLE_USER_PROMPT.format(tweet_facts=tweet_facts)
 
     if image_data:
-        # If image is provided, use vision API format
-        content = [
-            {
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": "image/png",
-                    "data": image_data,
-                },
-            },
-            {
-                "type": "text",
-                "text": user_prompt,
-            },
-        ]
-        messages = [{"role": "user", "content": content}]
-        fable = run_instructor_query(
+        # Format messages for vision API using the helper function
+        messages = format_vision_messages(
+            images=[image_data],
+            text=user_prompt,
+            model=model,
             system_message=system_prompt,
-            user_message="",  # Not used when messages is provided
+        )
+        fable = run_instructor_query(
             llm_model=model,
             temperature=temperature,
             process_id="write_fable",
@@ -602,7 +693,7 @@ def write_punchline_tweet(
     """Generate a punchline summary and select a relevant image from a paper's markdown content."""
     punchline = run_instructor_query(
         ps.TWEET_SYSTEM_PROMPT,
-        ps.TWEET_PUNCHLINE_USER_PROMPT.format(
+        ps.TWEET_PUNCHLINE_USER_PROMPT_V2.format(
             paper_title=paper_title,
             markdown_content=markdown_content,
             base_style=ps.TWEET_BASE_STYLE,
@@ -616,25 +707,54 @@ def write_punchline_tweet(
     return punchline
 
 
+def verify_punchline_image_relevance(
+    punchline_text: str,
+    image_data: str,
+    model: str = "gemini/gemini-2.5-pro",
+) -> po.PunchlineRelevance:
+    """Verify if an image is relevant to a given punchline text using a vision model."""
+    system_prompt = ps.TWEET_SYSTEM_PROMPT
+    user_prompt = ps.PUNCHLINE_VERIFICATION_USER_PROMPT.format(
+        punchline_text=punchline_text
+    )
+
+    ## Format messages for vision API
+    messages = format_vision_messages(
+        images=[image_data],  # Expects a list of base64 images
+        text=user_prompt,
+        model=model,
+        system_message=system_prompt,
+    )
+
+    relevance_assessment = run_instructor_query(
+        llm_model=model,
+        model=po.PunchlineRelevance,
+        process_id="verify_punchline_image_relevance",
+        messages=messages,
+        temperature=0.1,  # Low temp for objective assessment
+    )
+
+    return relevance_assessment
+
+
 def edit_tweet(
     tweet: str,
-    most_recent_tweets: str,
-    tweet_type="review",
-    model="gpt-4o",
-    temperature: float = 0.8,
+    model="claude-3-7-sonnet-20250219",
+    temperature: float = 1,
 ) -> str:
     """Edit a tweet via run_instructor_query."""
     system_prompt = ps.TWEET_SYSTEM_PROMPT
-    user_prompt = tweet_edit_user_map[tweet_type].format(
-        proposed_tweet=tweet, most_recent_tweets=most_recent_tweets
+    user_prompt = ps.TWEET_EDIT_USER_PROMPT.format(
+        original_post=tweet,
+        base_style=ps.TWEET_BASE_STYLE,
     )
     edited_tweet = run_instructor_query(
         system_prompt,
         user_prompt,
         llm_model=model,
         temperature=temperature,
-        model=po.TweetEdit,
         process_id="edit_tweet",
+        thinking={"type": "enabled", "budget_tokens": 1024},
     )
     return edited_tweet
 
@@ -644,9 +764,9 @@ def assess_tweet_ownership(
     paper_authors: str,
     tweet_text: str,
     tweet_username: str,
-    model: str = "gpt-4o",
-):
-    """Assess if a tweet is owned by LLMpedia."""
+    llm_model: str = "claude-3-7-sonnet-20250219",
+) -> bool:
+    """Assess if a tweet is written by paper authors."""
     system_prompt = ps.TWEET_OWNERSHIP_SYSTEM_PROMPT
     user_prompt = ps.TWEET_OWNERSHIP_USER_PROMPT.format(
         paper_title=paper_title,
@@ -655,9 +775,17 @@ def assess_tweet_ownership(
         tweet_username=tweet_username,
     )
     tweet_ownership = run_instructor_query(
-        system_prompt, user_prompt, llm_model=model, process_id="assess_tweet_ownership"
+        system_prompt, user_prompt, llm_model=llm_model, process_id="assess_tweet_ownership"
     )
-    return tweet_ownership
+
+    is_author_tweet = bool(
+        int(
+            tweet_ownership.split("<is_author_tweet>")[1].split("</is_author_tweet>")[0]
+        )
+    )
+    analysis = tweet_ownership.split("<analysis>")[1].split("</analysis>")[0]
+
+    return is_author_tweet
 
 
 def assess_llm_relevance(
@@ -686,6 +814,7 @@ def generate_paper_punchline(
         ps.PUNCHLINE_SUMMARY_USER_PROMPT.format(notes=notes),
         llm_model=model,
         process_id="generate_paper_punchline",
+        temperature=1,
     )
 
     if "<punchline>" in punchline:
@@ -694,20 +823,59 @@ def generate_paper_punchline(
     return punchline.strip()
 
 
+def format_paper_summary_and_facts_messages(
+    paper_title: str,
+    paper_content: str,
+    task_instruction: str,
+    llm_model: str = "claude-3-7-sonnet-20250219"
+) -> List[Dict]:
+    """Format messages for paper summarization and fact extraction with optimal caching."""
+    
+    messages = [
+        {"role": "system", "content": PAPER_SUMMARIZATION_AND_FACTS_SYSTEM_PROMPT},
+        {"role": "user", "content": f"Paper Title: {paper_title}\n\nPaper Content:\n{paper_content}"},
+        {"role": "user", "content": task_instruction}
+    ]
+    
+    cached_messages = add_cache_control(messages, cache_message_index=1, llm_model=llm_model)
+    
+    return cached_messages
+
+
 def generate_paper_interesting_facts(
     paper_title: str,
     paper_content: str,
     model: str = "claude-3-5-sonnet-20241022",
 ) -> str:
     """Extract up to 5 interesting, unusual, or counterintuitive facts from the paper."""
-    interesting_facts = run_instructor_query(
-        ps.INTERESTING_FACTS_SYSTEM_PROMPT.format(paper_title=paper_title),
-        ps.INTERESTING_FACTS_USER_PROMPT.format(paper_content=paper_content),
-        llm_model=model,
-        temperature=1,
-        process_id="generate_paper_interesting_facts",
-        thinking={"type": "enabled", "budget_tokens": 2048},
-    )
+    
+    # Check if model supports caching (Claude models)
+    if any(provider in model.lower() for provider in ['claude', 'anthropic']):
+        # Use new caching approach
+        messages = format_paper_summary_and_facts_messages(
+            paper_title=paper_title,
+            paper_content=paper_content,
+            task_instruction=FACT_EXTRACTION_TASK_INSTRUCTION,
+            llm_model=model
+        )
+        
+        interesting_facts = run_instructor_query(
+            llm_model=model,
+            temperature=1,
+            process_id="generate_paper_interesting_facts",
+            messages=messages,
+            # thinking={"type": "enabled", "budget_tokens": 2048},
+        )
+    else:
+        # Fallback to original approach for non-Claude models
+        interesting_facts = run_instructor_query(
+            ps.INTERESTING_FACTS_SYSTEM_PROMPT.format(paper_title=paper_title),
+            ps.INTERESTING_FACTS_USER_PROMPT.format(paper_content=paper_content),
+            llm_model=model,
+            temperature=1,
+            process_id="generate_paper_interesting_facts",
+            # thinking={"type": "enabled", "budget_tokens": 2048},
+        )
 
     return interesting_facts.strip()
 
@@ -775,8 +943,6 @@ Summary: {paper_details['summary'].iloc[0]}"""
     )
 
     response = run_instructor_query(
-        system_message="",  # Not used when messages provided
-        user_message="",  # Not used when messages provided
         llm_model=model,
         model=po.ImageAnalysis,
         process_id="analyze_paper_images",
@@ -819,14 +985,15 @@ def analyze_tweet_patterns(
     tweets_text: str,
     previous_entries: str,
     model: str = "claude-3-5-sonnet-20241022",
-    temperature: float = 0.7,
+    temperature: float = 1,
     start_date: str = None,
     end_date: str = None,
 ) -> Tuple[str, str]:
     """Analyze patterns and insights from a collection of tweets."""
     response = run_instructor_query(
-        ps.TWEET_ANALYSIS_SYSTEM_PROMPT,
+        ps.TWEET_SYSTEM_PROMPT,
         ps.TWEET_ANALYSIS_USER_PROMPT.format(
+            base_style=ps.TWEET_BASE_STYLE,
             tweets=tweets_text,
             start_date=start_date,
             end_date=end_date,
@@ -835,10 +1002,151 @@ def analyze_tweet_patterns(
         llm_model=model,
         temperature=temperature,
         process_id="analyze_tweet_patterns",
+        thinking={"type": "enabled", "budget_tokens": 2048},
     )
 
     ## Extract the response from the XML elements from the string
-    thinking_process = response.split("<think>")[1].split("</think>")[0]
     response = response.split("<response>")[1].split("</response>")[0]
 
-    return thinking_process, response
+    return response
+
+
+def analyze_reddit_patterns(
+    reddit_content: str,
+    subreddit: str,
+    previous_entries: str,
+    model: str = "claude-3-5-sonnet-20241022",
+    temperature: float = 1,
+    start_date: str = None,
+    end_date: str = None,
+) -> str:
+    """Analyze patterns and insights from Reddit community discussions."""
+    response = run_instructor_query(
+        ps.REDDIT_ANALYSIS_SYSTEM_PROMPT,
+        ps.REDDIT_ANALYSIS_USER_PROMPT.format(
+            base_style=ps.TWEET_BASE_STYLE,  # Reuse the same style guide
+            subreddit=subreddit,
+            content=reddit_content,
+            start_date=start_date,
+            end_date=end_date,
+            previous_entries=previous_entries,
+        ),
+        llm_model=model,
+        temperature=temperature,
+        process_id="analyze_reddit_patterns",
+        thinking={"type": "enabled", "budget_tokens": 2048},
+    )
+
+    ## Extract the response from the XML elements from the string
+    response = response.split("<response>")[1].split("</response>")[0]
+
+    return response
+
+
+def analyze_cross_subreddit_patterns(
+    multi_subreddit_content: str,
+    previous_entries: str,
+    model: str = "claude-3-5-sonnet-20241022",
+    temperature: float = 1,
+    start_date: str = None,
+    end_date: str = None,
+) -> str:
+    """Analyze patterns and insights across multiple Reddit communities."""
+    response = run_instructor_query(
+        ps.REDDIT_ANALYSIS_SYSTEM_PROMPT,
+        ps.CROSS_SUBREDDIT_ANALYSIS_PROMPT.format(
+            base_style=ps.TWEET_BASE_STYLE,  # Reuse the same style guide
+            content=multi_subreddit_content,
+            start_date=start_date,
+            end_date=end_date,
+            previous_entries=previous_entries,
+        ),
+        llm_model=model,
+        temperature=temperature,
+        process_id="analyze_cross_subreddit_patterns",
+        thinking={"type": "enabled", "budget_tokens": 2048},
+    )
+
+    ## Extract the response from the XML elements from the string
+    response = response.split("<response>")[1].split("</response>")[0]
+
+    return response
+
+
+def summarize_full_document(
+    paper_title: str,
+    document: str,
+    paragraphs: int = 5,
+    previous_notes: str = None,
+    model: str = "gemini/gemini-2.5-pro",
+) -> str:
+    """Summarize a full paper markdown into a specified number of paragraphs."""
+    
+    # Check if model supports caching (Claude models)
+    if any(provider in model.lower() for provider in ['claude', 'anthropic']):
+        # Use new caching approach with inline task instruction
+        task_instruction = f"""<task>
+Generate a {paragraphs}-paragraph summary of the above paper.
+</task>
+
+<context>
+Your primary task is to expand an existing summary of this paper into a longer, more detailed version while preserving perfect consistency with the original summary. Your expanded summary should maintain all content from the shorter version but add new details and explanations between existing points.
+
+Previous summary context: {previous_notes or "N/A"}
+
+You are expanding an existing paper summary to create a more detailed version. Your expanded summary must preserve ALL content from the original summary while adding new information between existing points. The result should read as a natural expansion where a reader can seamlessly adjust between summary lengths.
+</context>
+
+<guidelines>
+Your responses should have a friendly academic tone with a casual edge:
+- Go for direct, concise wording that fits the AI research community.
+- Don't be overly technical, when possible use simple language and avoid complex sentences.
+- However, don't shy away from important terms - your audience has domain knowledge.
+- You can be slightly informal when appropriate - a dash of humor is welcome, but keep it subtle.
+- Avoid being pedantic, obnoxious or overtly-critical.
+- Avoid conclusions and final remarks unless they add value to the discussion.
+- Avoid filler content and uninformative sentences.
+- You may use markdown formatting (bold, italic, tables, code blocks, etc.) and inline LaTeX.
+</guidelines>
+
+<response_format>
+Provide your response inside the <summary> tags. Do not include any other text.
+</response_format>"""
+        
+        messages = format_paper_summary_and_facts_messages(
+            paper_title=paper_title,
+            paper_content=document,
+            task_instruction=task_instruction,
+            llm_model=model
+        )
+        
+        summary = run_instructor_query(
+            llm_model=model,
+            process_id="summarize_full_document",
+            temperature=0.3,
+            messages=messages,
+        )
+    else:
+        # Fallback to original approach for non-Claude models
+        system_prompt = ps.FULL_DOCUMENT_SUMMARY_SYSTEM_PROMPT.format(
+            paper_title=paper_title
+        )
+        user_prompt = ps.FULL_DOCUMENT_SUMMARY_USER_PROMPT.format(
+            content=document,
+            paragraphs=paragraphs,
+            previous_notes=previous_notes,
+            tweet_base_style=ps.TWEET_BASE_STYLE,
+        )
+
+        summary = run_instructor_query(
+            system_prompt,
+            user_prompt,
+            llm_model=model,
+            process_id="summarize_full_document",
+            temperature=0.3,
+        )
+
+    summary = summary.split("<summary>")[1].split("</summary>")[0]
+    summary = summary.strip()
+
+    return summary

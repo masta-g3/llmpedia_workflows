@@ -1,5 +1,12 @@
 # Repository Structure
 
+### Core Components
+- `app.py`: Main Streamlit application serving the web interface
+- `workflow/`: Sequential processing pipeline modules (a0 → z4) - ordered workflow steps that process papers from scraping to tweeting
+- `utils/`: Shared utility functions, helper modules, and reusable components imported by other modules
+- `executors/`: Standalone driver scripts for specific tasks, maintenance, and manual operations (not part of main workflow)
+- `prompts/`: LLM prompt templates for various tasks
+
 ```
 llmpedia/
 ├── app.py                    # Main Streamlit application
@@ -9,6 +16,7 @@ llmpedia/
 ├── docker-compose.yml        # Container orchestration
 ├── workflow.sh               # Main workflow execution script
 ├── tweet_collector.sh        # Tweet collection script
+├── reddit_collector.sh       # Reddit collection and analysis script
 ├── update_and_restart.sh     # Deployment update script
 ├── daily_update.sh           # Daily update automation script
 ├── weekly_review.sh          # Weekly review automation script
@@ -42,33 +50,45 @@ llmpedia/
 │   ├── n0_repo_extractor.py    # Repository extraction
 │   ├── z0_update_gist.py       # Update gist workflow
 │   ├── z1_generate_tweet.py    # Tweet generation
-│   ├── z2_generate_tweet.py    # Configuration-driven tweet generation
-│   └── z3_schedule_reply.py    # Tweet reply scheduling
+│   ├── z2_generate_tweet.py    # Configuration-driven tweet generation (stores pending tweets)
+│   ├── z3_schedule_reply.py    # Tweet reply scheduling
+│   └── z4_select_and_post_tweet.py # Selects best pending tweet via LLM and posts it
 │
 ├── utils/                    # Utility modules and helpers
 │   ├── app_utils.py           # Application utilities
+│   ├── bash_utils.sh          # Common bash utilities for scheduling and progress bars
 │   ├── data_cards.py          # Data card utilities
 │   ├── custom_langchain.py    # Custom LangChain implementations
 │   ├── embeddings.py          # Embedding utilities
 │   ├── instruct.py            # Instruction utilities
+│   ├── image_utils.py         # Utilities for managing image paths and retrieval (e.g., `ImageManager`) # NEW
 │   ├── db/                    # Database operations modules
 │   │   ├── __init__.py          # Package initialization
 │   │   ├── db_utils.py          # Core database utilities
 │   │   ├── paper_db.py          # Paper-related operations
-│   │   ├── tweet_db.py          # Tweet-related operations
+│   │   ├── tweet_db.py          # Tweet-related operations (Added pending tweet management)
+│   │   ├── reddit_db.py         # Reddit-related operations (posts, comments, analysis)
 │   │   ├── embedding_db.py      # Embedding-related operations
 │   │   └── logging_db.py        # Logging-related operations
 │   ├── prompts.py             # LLM prompt templates
-│   ├── vector_store.py        # Vector storage operations
+│   ├── vector_store.py        # Vector storage operations (Added tweet selection function)
 │   ├── paper_utils.py         # Paper processing utilities
 │   ├── tweet.py               # Tweet processing utilities
+│   ├── reddit.py              # Reddit collection and processing utilities (includes arxiv code extraction)
 │   ├── streamlit_utils.py     # Streamlit UI utilities
 │   ├── pydantic_objects.py    # Data models
 │   ├── plots.py               # Visualization utilities
+│   │                          #   - `plot_publication_counts`
+│   │                          #   - `plot_activity_map`
+│   │                          #   - `plot_weekly_activity_ts`
+│   │                          #   - `plot_cluster_map`
+│   │                          #   - `plot_repos_by_feature`
+│   │                          #   - `generate_daily_papers_chart` (matplotlib)
 │   ├── styling.py             # UI styling
 │   ├── logging_utils.py       # Logging configuration
 │   ├── notifications.py       # Notification system
-│   └── tweet_generation/      # Tweet generation utilities
+│   ├── tweet_data_utils.py    # Utilities for retrieving and formatting tweet-related data. # NEW
+│   └── tweet_generators.py    # Utilities for generating tweet content components and selecting types. Contains a registry (`GENERATOR_REGISTRY`) mapping names to standardized generator functions. # UPDATED
 │
 ├── prompts/                  # LLM prompt templates
 │   ├── __init__.py             # Package initialization
@@ -76,26 +96,36 @@ llmpedia/
 │   ├── llmpedia_prompts.py     # LLMpedia specific prompts
 │   ├── qna_prompts.py          # Question and answer prompts
 │   ├── react_prompts.py        # ReAct prompts
-│   ├── tweet_prompts.py        # Tweet generation prompts
+│   ├── tweet_prompts.py        # Tweet generation, reply, and selection prompts
 │   ├── weekly_prompts.py       # Weekly review prompts
 │   └── workflow_prompts.py     # Workflow prompts
 │
 ├── executors/                # Task execution modules
 │   ├── a1_daily_update.py      # Daily update about new papers
 │   ├── a3_tweet_sender.py      # Tweet sending script
+│   ├── a3_weekly_review_tweet.py # Weekly review tweet generation
 │   ├── b1_weekly_review.py     # Weekly review generation
 │   ├── c1_tweet_reply.py       # Tweet reply workflow script
-│   ├── collect_tweets.py       # Tweet collection script
+│   ├── cleanup_duplicate_tweets.py # Database cleanup utility for duplicate pending tweets
+│   ├── d0_collect_tweets.py    # Collects LLM-related tweets and stores in database
+│   ├── d1_analyze_tweets.py    # Analyzes tweet patterns and generates insights using LLM
+│   ├── d2_post_analysis.py     # Posts latest tweet analysis to X.com with nostalgic news report format
+│   ├── e0_collect_reddit.py    # Collects Reddit posts and comments from LLM subreddits
+│   ├── e1_analyze_reddit.py    # Analyzes Reddit community patterns and generates insights
+│   ├── e2_post_reddit_analysis.py   # Posts Reddit cross-analysis to X.com
 │   ├── image_gallery.py        # Image gallery generation
-│   ├── t0_analyze_tweets.py    # Tweet analysis script
-│   ├── delete_paper.py         # Paper deletion utility
+│   ├── delete_paper.py         # Paper deletion utility (xx_delete_paper.py)
 │   ├── summarize_extended.py   # Extended summarization
-│   ├── check_corrupt_pdfs.py   # PDF corruption checker
-│   ├── batch_s3_upload.py      # S3 batch upload utility
-│   └── my_aesthetic_predictor.py # Aesthetic prediction utility
+│   ├── check_corrupt_pdfs.py   # PDF corruption checker (xx_check_corrupt_pdfs.py)
+│   ├── batch_s3_upload.py      # S3 batch upload utility (xx_batch_s3_upload.py)
+│   ├── my_aesthetic_predictor.py # Aesthetic prediction utility
+│   └── pdf_to_markdown.py      # Converts a PDF file to markdown using the marker library
 │
 ├── notebooks/                # Jupyter notebooks for analysis
 ├── sql/                      # SQL scripts and schemas
+│   ├── create_reddit_posts.sql    # Reddit posts table schema (includes arxiv_code field)
+│   ├── create_reddit_comments.sql # Reddit comments table schema
+│   ├── create_reddit_analysis.sql # Reddit analysis table schema
 ├── data/                     # Data storage
 ├── artifacts/                # Generated artifacts
 ├── logs/                     # Application logs
@@ -115,12 +145,10 @@ llmpedia/
 
 ## Directory Overview
 
-### Core Components
-- `app.py`: Main Streamlit application serving the web interface
-- `workflow/`: Contains the sequential processing pipeline modules (a0 → z3)
-- `utils/`: Shared utility functions and helper modules
-- `executors/`: Task execution and scheduling modules
-- `prompts/`: LLM prompt templates for various tasks
+**Directory Structure Guidelines:**
+- **`workflow/`**: Sequential numbered processing steps (a0→z4) that form the main data pipeline
+- **`utils/`**: Reusable helper functions, classes, and modules imported by other components
+- **`executors/`**: Standalone driver scripts for maintenance, analysis, and manual operations
 
 ### Data and Storage
 - `data/`: Raw and processed data storage
@@ -169,6 +197,7 @@ llmpedia/
 - `tweet_db.py`: Tweet-related database operations
   - Storing and reading tweets
   - Managing tweet analyses and replies
+  - Managing pending tweet candidates
 - `embedding_db.py`: Embedding-related database operations
   - Storing and loading embeddings
   - Managing embedding dimensions
@@ -184,6 +213,7 @@ llmpedia/
   - Embedding operations
   - LLM query functions
   - Tweet generation and reply functions
+  - Pending tweet selection function
   
 ### Other Utilities
 - `app_utils.py`: Application utilities
@@ -192,19 +222,31 @@ llmpedia/
 - `embeddings.py`: Embedding generation and processing
 - `instruct.py`: Instruction formatting utilities
 - `paper_utils.py`: Paper processing utilities
+  - XML content extraction
+  - File upload/download operations
+  - Text preprocessing
 - `tweet.py`: Tweet processing utilities
 - `streamlit_utils.py`: Streamlit UI utilities
 - `pydantic_objects.py`: Data models
 - `plots.py`: Visualization utilities
+  - `plot_publication_counts`: Line/bar chart of paper counts over time.
+  - `plot_activity_map`: Calendar heatmap of publication activity.
+  - `plot_weekly_activity_ts`: Time series plot of weekly paper counts.
+  - `plot_cluster_map`: Scatter plot of UMAP embeddings.
+  - `plot_repos_by_feature`: Bar chart of repository counts by feature.
+  - `generate_daily_papers_chart`: Matplotlib bar chart of daily paper counts (e.g., last 7 days).
 - `styling.py`: UI styling
 - `logging_utils.py`: Logging configuration
 - `notifications.py`: Notification system
+- `image_utils.py`: Utilities for managing image paths and retrieval (e.g., `ImageManager`) # NEW
+- `tweet_data_utils.py`: Utilities for retrieving and formatting tweet-related data. # NEW
+- `tweet_generators.py`: Utilities for generating tweet content components and selecting types. Contains a registry (`GENERATOR_REGISTRY`) mapping names to standardized generator functions. # UPDATED
 
 ## Prompts Directory (`prompts/`)
 - `aux_prompts.py`: Auxiliary prompts for miscellaneous tasks
 - `llmpedia_prompts.py`: LLMpedia-specific prompts
 - `qna_prompts.py`: Question and answer-related prompts
 - `react_prompts.py`: ReAct framework-related prompts
-- `tweet_prompts.py`: Tweet generation and reply prompts
+- `tweet_prompts.py`: Tweet generation, reply, and selection prompts
 - `weekly_prompts.py`: Weekly review generation prompts
 - `workflow_prompts.py`: Workflow process prompts

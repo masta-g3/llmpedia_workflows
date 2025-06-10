@@ -7,44 +7,11 @@ set +a
 
 export PROJECT_PATH=${PROJECT_PATH:-$(pwd)}
 
-function show_progress() {
-    local elapsed=$1
-    local total=$2
-    local pct=$((elapsed * 100 / total))
-    local filled=$((pct / 2))
-    local unfilled=$((50 - filled))
-    
-    printf "\r["
-    printf "%${filled}s" '' | tr ' ' '#'
-    printf "%${unfilled}s" '' | tr ' ' '-'
-    printf "] %d%% (%dm %ds/%dm)" $pct $((elapsed / 60)) $((elapsed % 60)) $((total / 60))
-}
+## Source common bash utilities
+source "${PROJECT_PATH}/utils/bash_utils.sh"
 
 function sleep_until_target() {
-    ## Get current time in seconds since epoch.
-    current_time=$(date +%s)
-    
-    ## Calculate target time (18:30 PST) for today.
-    target_time=$(TZ=PST8PDT date -v18H -v30M -v00S +%s)
-    
-    ## If current time is past target time, set target to tomorrow.
-    if [ $current_time -gt $target_time ]; then
-        target_time=$(TZ=PST8PDT date -v+1d -v18H -v30M -v00S +%s)
-    fi
-    
-    ## Calculate seconds until target.
-    seconds_to_wait=$((target_time - current_time))
-    
-    echo "Waiting until 6:30 PM PST..." | tee -a "$LOG_FILE"
-    echo "Current time: $(date)" | tee -a "$LOG_FILE"
-    echo "Target time: $(date -r $target_time)" | tee -a "$LOG_FILE"
-    
-    ## Show progress bar while waiting.
-    for ((i=0; i<=$seconds_to_wait; i++)); do
-        show_progress $i $seconds_to_wait
-        sleep 1
-    done
-    printf "\n"
+    sleep_until_daily_time 18 30 "Daily Update"
 }
 
 function run_daily_update() {

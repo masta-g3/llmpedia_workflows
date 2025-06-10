@@ -39,7 +39,7 @@ report_sections_map = {
     "related_websites_libraries_repos": "Related Websites, Libraries and Repos",
 }
 
-
+94108
 def prepare_calendar_data(df: pd.DataFrame, year: int) -> pd.DataFrame:
     """Prepares data for the creation of a calendar heatmap."""
     df["published"] = pd.to_datetime(df["published"])
@@ -127,7 +127,7 @@ def add_links_to_text_blob(response: str):
     """Add links to arxiv codes in the response."""
 
     def repl(match):
-        return f"[arxiv:{match.group(1)}](https://llmpedia.streamlit.app/?arxiv_code={match.group(1)})"
+        return f"[arxiv:{match.group(1)}](https://llmpedia.ai/?arxiv_code={match.group(1)})"
 
     return re.sub(r"arxiv:(\d{4}\.\d{4,5})", repl, response)
 
