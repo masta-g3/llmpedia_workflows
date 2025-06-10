@@ -160,6 +160,7 @@ REDDIT_ANALYSIS_USER_PROMPT = """
 - Focus on technical discussions, user experiences, and community sentiment.
 - If any specific tools, models, or papers are mentioned prominently, be sure to note them.
 - Pay attention to questions, problems, and solutions being discussed.
+- Be honest about activity levels: if engagement is low or discussions are minimal, acknowledge this rather than forcing insights from limited content.
 </guidelines>
 
 <style_guide>
@@ -192,6 +193,7 @@ CROSS_SUBREDDIT_ANALYSIS_PROMPT = """
 - Identify cross-pollination of ideas and topics appearing in multiple communities.
 - Note community-specific language, terminology, and expertise levels.
 - Pay attention to how different communities approach similar topics.
+- Be honest about activity levels: if overall engagement is low across communities or discussions are minimal, acknowledge quieter periods rather than forcing analysis from limited activity.
 </guidelines>
 
 <style_guide>

@@ -116,7 +116,7 @@ def generate_tweet_content(stats: DailyStats) -> str:
     
     ## Add top cited papers if any, with better formatting
     if stats.top_cited_papers:
-        tweet += "\n\n✨ Highly cited papers:"
+        tweet += "\n\n🏆 Highly cited papers:"
         for paper in stats.top_cited_papers:
             tweet += f"\n⭐ {paper['title']}\n   {paper['citations']} citations"
     
