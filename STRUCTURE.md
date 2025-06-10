@@ -16,6 +16,7 @@ llmpedia/
 ├── docker-compose.yml        # Container orchestration
 ├── workflow.sh               # Main workflow execution script
 ├── tweet_collector.sh        # Tweet collection script
+├── reddit_collector.sh       # Reddit collection and analysis script
 ├── update_and_restart.sh     # Deployment update script
 ├── daily_update.sh           # Daily update automation script
 ├── weekly_review.sh          # Weekly review automation script
@@ -55,6 +56,7 @@ llmpedia/
 │
 ├── utils/                    # Utility modules and helpers
 │   ├── app_utils.py           # Application utilities
+│   ├── bash_utils.sh          # Common bash utilities for scheduling and progress bars
 │   ├── data_cards.py          # Data card utilities
 │   ├── custom_langchain.py    # Custom LangChain implementations
 │   ├── embeddings.py          # Embedding utilities
@@ -65,12 +67,14 @@ llmpedia/
 │   │   ├── db_utils.py          # Core database utilities
 │   │   ├── paper_db.py          # Paper-related operations
 │   │   ├── tweet_db.py          # Tweet-related operations (Added pending tweet management)
+│   │   ├── reddit_db.py         # Reddit-related operations (posts, comments, analysis)
 │   │   ├── embedding_db.py      # Embedding-related operations
 │   │   └── logging_db.py        # Logging-related operations
 │   ├── prompts.py             # LLM prompt templates
 │   ├── vector_store.py        # Vector storage operations (Added tweet selection function)
 │   ├── paper_utils.py         # Paper processing utilities
 │   ├── tweet.py               # Tweet processing utilities
+│   ├── reddit.py              # Reddit collection and processing utilities (includes arxiv code extraction)
 │   ├── streamlit_utils.py     # Streamlit UI utilities
 │   ├── pydantic_objects.py    # Data models
 │   ├── plots.py               # Visualization utilities
@@ -106,6 +110,9 @@ llmpedia/
 │   ├── d0_collect_tweets.py    # Collects LLM-related tweets and stores in database
 │   ├── d1_analyze_tweets.py    # Analyzes tweet patterns and generates insights using LLM
 │   ├── d2_post_analysis.py     # Posts latest tweet analysis to X.com with nostalgic news report format
+│   ├── e0_collect_reddit.py    # Collects Reddit posts and comments from LLM subreddits
+│   ├── e1_analyze_reddit.py    # Analyzes Reddit community patterns and generates insights
+│   ├── e2_post_reddit_analysis.py   # Posts Reddit cross-analysis to X.com
 │   ├── image_gallery.py        # Image gallery generation
 │   ├── delete_paper.py         # Paper deletion utility (xx_delete_paper.py)
 │   ├── summarize_extended.py   # Extended summarization
@@ -116,6 +123,9 @@ llmpedia/
 │
 ├── notebooks/                # Jupyter notebooks for analysis
 ├── sql/                      # SQL scripts and schemas
+│   ├── create_reddit_posts.sql    # Reddit posts table schema (includes arxiv_code field)
+│   ├── create_reddit_comments.sql # Reddit comments table schema
+│   ├── create_reddit_analysis.sql # Reddit analysis table schema
 ├── data/                     # Data storage
 ├── artifacts/                # Generated artifacts
 ├── logs/                     # Application logs
