@@ -65,15 +65,15 @@ function run_reddit_workflow() {
     fi
 
     # Step 3: Post Reddit cross-analysis to X.com (prioritize cross-subreddit analysis)
-    echo "Step 3: Posting Reddit cross-analysis to X.com..." | tee -a "$LOG_FILE"
-    python "executors/e2_post_reddit_analysis.py" 2>&1 | tee -a "$LOG_FILE" "$temp_error_file"
-    if [ ${PIPESTATUS[0]} -ne 0 ]; then
-        echo ">> [Reddit Workflow] Analysis posting failed at $(date)" | tee -a "$LOG_FILE"
-        local error_msg=$(cat "$temp_error_file")
-        rm -f "$temp_error_file"
-        echo "Error: $error_msg" | tee -a "$LOG_FILE"
-        return 1
-    fi
+    # echo "Step 3: Posting Reddit cross-analysis to X.com..." | tee -a "$LOG_FILE"
+    # python "executors/e2_post_reddit_analysis.py" 2>&1 | tee -a "$LOG_FILE" "$temp_error_file"
+    # if [ ${PIPESTATUS[0]} -ne 0 ]; then
+    #     echo ">> [Reddit Workflow] Analysis posting failed at $(date)" | tee -a "$LOG_FILE"
+    #     local error_msg=$(cat "$temp_error_file")
+    #     rm -f "$temp_error_file"
+    #     echo "Error: $error_msg" | tee -a "$LOG_FILE"
+    #     return 1
+    # fi
 
     ## Log successful run.
     rm -f "$temp_error_file"
