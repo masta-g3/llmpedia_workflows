@@ -12,7 +12,6 @@ ca-certificate.crt
 data/
 imgs/
 logs/
-tests/
 temp_files/
 arxiv_first_page/
 notebooks/

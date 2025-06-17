@@ -32,7 +32,7 @@ def main():
     existing_codes = set(db_utils.get_arxiv_id_list("semantic_details"))
     if not OVERRIDE:
         arxiv_codes = list(set(arxiv_codes) - existing_codes)
-    arxiv_codes = sorted(arxiv_codes)[::-1][:500]
+    arxiv_codes = sorted(arxiv_codes)[::-1][:1000]
 
     total_papers = len(arxiv_codes)
     logger.info(f"Found {total_papers} papers to process for citations.")

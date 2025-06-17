@@ -36,7 +36,7 @@ from utils.image_utils import ImageManager
 from utils.db.tweet_db import PendingTweetStatus
 
 # Constants
-DEFAULT_CANDIDATE_LIMIT = 10
+DEFAULT_CANDIDATE_LIMIT = 15
 DEFAULT_SELECTION_MODEL = "claude-3-7-sonnet-20250219"
 DATA_PATH = os.path.join(PROJECT_PATH, "data")
 IMG_PATH = os.path.join(DATA_PATH, "arxiv_art")

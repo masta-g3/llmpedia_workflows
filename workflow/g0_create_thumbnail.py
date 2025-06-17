@@ -107,24 +107,25 @@ def generate_image(title: str, img_file: str) -> None:
                 api_token=os.getenv("RD_API_KEY"),
                 prompt=caption,
             )
+            b64_img = result['base64_images'][0]
             break
         except requests.exceptions.HTTPError as e:
             if attempt == 2:
                 raise
             logger.warning(f"API call failed (attempt {attempt + 1}/3), retrying...")
             time.sleep(10)
-
-    b64_img = result['base64_images'][0]
+        except IndexError as e:
+            logger.error(f"IndexError accessing base64_images: {e}")
+            logger.error(f"API result: {result}")
+            raise
     
     with open(img_file, "wb") as f:
         f.write(base64.b64decode(b64_img))
 
-    logger.info(f"--> Saved image to: {img_file}")
-
     # with torch.inference_mode():
     #     checkpointloadersimple = CheckpointLoaderSimple()
     #     checkpointloadersimple_4 = checkpointloadersimple.load_checkpoint(
-    #         ckpt_name="sd_xl_base_1.0.safetensors"
+    #         ckpt_name="sd_xl_base_1.0.safetensors"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
     #     )
 
     #     loraloader = LoraLoader()

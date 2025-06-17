@@ -100,7 +100,7 @@ while true; do
     run_step "15.2: Generate tweet" "workflow/z2_generate_tweet.py"
     run_step "15.3: Generate tweet" "workflow/z2_generate_tweet.py"
     run_step "15.4: Generate tweet" "workflow/z2_generate_tweet.py"
-    run_step "16: Tweet Replier" "workflow/z3_schedule_reply.py"
+    # run_step "16: Tweet Replier" "workflow/z3_schedule_reply.py"
     run_step "17: Select and Post Tweet" "workflow/z4_select_and_post_tweet.py"
 
     echo "Cycle completed at $(date)" | tee -a "$LOG_FILE"
