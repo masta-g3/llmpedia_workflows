@@ -609,6 +609,16 @@ def extract_author_tweet_data(
         paper_title, paper_authors, tweet_text, username, llm_model="gemini/gemini-2.5-pro-preview-05-06"
     )
     if is_author_post:
+        # Like the author tweet
+        try:
+            like_button = tweet_elem.find_element(By.CSS_SELECTOR, '[data-testid="like"]')
+            like_button.click()
+            time.sleep(1)  # Brief pause for action to complete
+            # Note: We could add validation here by checking if the button changes to "liked" state
+        except Exception as e:
+            # Log warning but continue with workflow
+            pass  # Will be logged by calling function if needed
+        
         link = tweet_elem.find_element(
             By.CSS_SELECTOR, 'a[href*="/status/"]'
         ).get_attribute("href")
@@ -810,13 +820,17 @@ def find_paper_author_tweet(
             if tweets_checked > max_tweets_to_check:
                 break
 
-            tweet_data = extract_author_tweet_data(
-                tweet_elem, paper_title, paper_authors
-            )
-            if tweet_data:
-                logger.info(f"Found author tweet from: {tweet_data['username']}")
-                browser.quit()
-                return tweet_data
+            try:
+                tweet_data = extract_author_tweet_data(
+                    tweet_elem, paper_title, paper_authors
+                )
+                if tweet_data:
+                    logger.info(f"Found and liked author tweet from: {tweet_data['username']}")
+                    browser.quit()
+                    return tweet_data
+            except Exception as e:
+                logger.warning(f"Failed to process tweet or like action: {str(e)}")
+                continue
 
         # Scroll and check progress
         last_height = browser.execute_script(
