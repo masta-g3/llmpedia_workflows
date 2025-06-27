@@ -520,8 +520,13 @@ def get_arxiv_info(arxiv_code: str, title: Optional[str] = None):
         id_list=[arxiv_code], max_results=40, sort_by=arxiv.SortCriterion.Relevance
     )
     client = arxiv.Client()
-    res = list(client.results(search))
     arxiv_meta = None
+    try:
+        res = list(client.results(search))
+    except Exception as e:
+        print(f"Error getting arxiv info for {arxiv_code}: {e}")
+        return arxiv_meta
+    
     if len(res) > 0:
         arxiv_meta = [
             r for r in res if r.entry_id.split("/")[-1].split("v")[0] == arxiv_code
