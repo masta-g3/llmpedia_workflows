@@ -151,9 +151,13 @@ def scrape_ai_news_papers(start_date, end_date=None):
 
     response = requests.get("https://buttondown.email/ainews/archive/")
     soup = BeautifulSoup(response.content, "html.parser")
-    mailinglist_entry = soup.find_all("div", class_="email-list")[0]
-    ## Get all <a> elements under the div
-    mailinglist_entry = mailinglist_entry.find_all("a", href=True)
+    try:
+        mailinglist_entry = soup.find_all("div", class_="email-list")[0]
+        ## Get all <a> elements under the div
+        mailinglist_entry = mailinglist_entry.find_all("a", href=True)
+    except Exception as e:
+        logger.error(f"Error scraping AI News: {e}")
+        return df
 
     for entry in mailinglist_entry:
         date_str = entry.find("div", class_="email-metadata").text.strip()
