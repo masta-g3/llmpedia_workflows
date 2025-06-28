@@ -28,12 +28,14 @@ class TweetAnalysisResult:
     unique_count: int
     thinking_process: str
     response: str
+    referenced_tweets: Optional[dict] = None
 
 def format_tweets_for_analysis(tweets_df: pd.DataFrame) -> str:
     """Format tweets into a string for analysis."""
     tweets = []
     for _, row in tweets_df.iterrows():
-        tweet_str = f"TWEET: {row['text']}\n"
+        tweet_str = f"TWEET ID: {row['id']}\n"
+        tweet_str += f"TWEET: {row['text']}\n"
         tweet_str += f"Author: {row['author']}\n"
         tweet_str += f"Metrics: {row['like_count']} likes, {row['reply_count']} replies\n"
         tweet_str += f"Time: {pd.to_datetime(row['tstp']).strftime('%Y-%m-%d %H:%M:%S')}\n"
@@ -79,7 +81,7 @@ def process_tweets(start_time: Optional[str] = None, time_span_hours: int = 6) -
     
     # Format and analyze tweets
     tweets_text = format_tweets_for_analysis(tweets_df)
-    response = vs.analyze_tweet_patterns(
+    response, referenced_tweets = vs.analyze_tweet_patterns(
         tweets_text,
         previous_entries=previous_entries,
         start_date=min_date.strftime("%Y-%m-%d %H:%M:%S"),
@@ -96,7 +98,8 @@ def process_tweets(start_time: Optional[str] = None, time_span_hours: int = 6) -
         max_date=max_date,
         unique_count=unique_count,
         thinking_process=thinking_process,
-        response=response
+        response=response,
+        referenced_tweets=referenced_tweets
     )
 
 def main():
@@ -120,7 +123,8 @@ def main():
             max_date=result.max_date,
             unique_count=result.unique_count,
             thinking_process=result.thinking_process,
-            response=result.response
+            response=result.response,
+            referenced_tweets=result.referenced_tweets
         )
         logger.info("Tweet analysis completed successfully")
         

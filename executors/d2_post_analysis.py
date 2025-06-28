@@ -11,7 +11,7 @@ import sys
 import argparse
 import logging
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
 import pandas as pd
 import pytz
 
@@ -28,7 +28,7 @@ if PROJECT_PATH not in sys.path:
 # Local imports
 from utils.logging_utils import setup_logger
 import utils.db.tweet_db as tweet_db
-from utils.tweet import send_tweet2, TweetThread, boldify, bold
+from utils.tweet import send_tweet2, TweetThread, Tweet, boldify, bold
 import utils.notifications as em
 
 logger = setup_logger(__name__, "d2_post_analysis.log")
@@ -82,6 +82,7 @@ def get_latest_analysis() -> Optional[dict]:
         ],  # This is the original tstp from DB (analysis creation time)
         "response": latest_analysis_series["response"],
         "thinking_process": latest_analysis_series.get("thinking_process", ""),
+        "referenced_tweets": latest_analysis_series.get("referenced_tweets", None),
     }
 
     # Get the creation time for logging purposes
@@ -92,6 +93,41 @@ def get_latest_analysis() -> Optional[dict]:
     )
 
     return analysis_data
+
+
+def get_referenced_tweet_urls(analysis_data: dict, max_tweets: int = 2) -> List[str]:
+    """Extract tweet URLs from referenced_tweets JSONB data."""
+    referenced_tweets = analysis_data.get("referenced_tweets")
+    if not referenced_tweets:
+        return []
+    
+    try:
+        # Parse JSON if it's a string
+        if isinstance(referenced_tweets, str):
+            import json
+            referenced_tweets = json.loads(referenced_tweets)
+        
+        tweets_list = referenced_tweets.get("tweets", [])
+        if not tweets_list:
+            return []
+        
+        # Get tweet IDs in analysis order (first mentioned = higher priority)
+        tweet_ids = [tweet["tweet_id"] for tweet in tweets_list[:max_tweets]]
+        
+        # Get URLs from database
+        url_map = tweet_db.get_tweet_urls_by_ids(tweet_ids)
+        
+        # Return URLs in same order as analysis
+        urls = []
+        for tweet_id in tweet_ids:
+            if tweet_id in url_map:
+                urls.append(url_map[tweet_id])
+        
+        return urls
+        
+    except Exception as e:
+        logger.warning(f"Error extracting referenced tweet URLs: {e}")
+        return []
 
 
 def format_analysis_tweet(analysis_data: dict, title: str) -> str:
@@ -124,20 +160,39 @@ def format_analysis_tweet(analysis_data: dict, title: str) -> str:
 
 
 def post_analysis_tweet(analysis_data: dict, title: str) -> bool:
-    """Post the analysis as a tweet to X.com."""
+    """Post the analysis as a tweet thread to X.com."""
     logger.info(f"Formatting tweet with title: {title}")
+    
+    # Get main tweet content
     tweet_content = format_analysis_tweet(analysis_data, title)
-
-    logger.info(f"Tweet content length: {len(tweet_content)} characters")
-
-    # Create a simple tweet thread
-    thread = TweetThread.create_simple_tweet(
-        content=tweet_content,
+    logger.info(f"Main tweet content length: {len(tweet_content)} characters")
+    
+    # Get referenced tweet URLs
+    referenced_urls = get_referenced_tweet_urls(analysis_data, max_tweets=2)
+    
+    # Create Tweet objects for the thread
+    tweets = []
+    
+    # Main analysis tweet (position 0)
+    tweets.append(Tweet(content=tweet_content, position=0))
+    
+    # Add referenced tweets to thread
+    for i, url in enumerate(referenced_urls, 1):
+        source_tweet_content = f"📌 Source Tweet #{i}:\n{url}"
+        tweets.append(Tweet(content=source_tweet_content, position=i))
+        logger.info(f"Added source tweet #{i}: {url}")
+    
+    logger.info(f"Creating thread with {len(tweets)} tweets")
+    
+    # Create tweet thread
+    thread = TweetThread(
+        tweets=tweets,
         tweet_type="analysis_report",
         metadata={
             "analysis_timestamp": str(analysis_data["timestamp"]),
             "analysis_id": analysis_data["id"],
             "title_used": title,
+            "referenced_tweets_count": len(referenced_urls),
         },
     )
 
@@ -213,12 +268,23 @@ def main():
         if args.dry_run:
             # Show what would be posted
             tweet_content = format_analysis_tweet(analysis_data, title)
+            referenced_urls = get_referenced_tweet_urls(analysis_data, max_tweets=2)
+            
             print("\n" + "=" * 60)
-            print("DRY RUN - Would post the following tweet:")
+            print("DRY RUN - Would post the following tweet thread:")
             print("=" * 60)
+            print("TWEET 1 (Analysis):")
             print(tweet_content)
-            print("=" * 60)
             print(f"Character count: {len(tweet_content)}")
+            
+            for i, url in enumerate(referenced_urls, 1):
+                source_tweet_content = f"📌 Source Tweet #{i}:\n{url}"
+                print(f"\nTWEET {i+1} (Source #{i}):")
+                print(source_tweet_content)
+                print(f"Character count: {len(source_tweet_content)}")
+            
+            print("=" * 60)
+            print(f"Total tweets in thread: {1 + len(referenced_urls)}")
             logger.info("Dry run completed")
             sys.exit(0)
 

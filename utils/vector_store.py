@@ -11,13 +11,17 @@ import utils.prompts as ps
 import utils.pydantic_objects as po
 import utils.app_utils as au
 import utils.db.paper_db as paper_db
-from utils.instruct import run_instructor_query, format_vision_messages, add_cache_control
+from utils.instruct import (
+    run_instructor_query,
+    format_vision_messages,
+    add_cache_control,
+)
 from utils.prompts import (
     TWEET_SYSTEM_PROMPT,
     TWEET_BASE_STYLE,
     SELECT_BEST_PENDING_TWEET_USER_PROMPT,
     PAPER_SUMMARIZATION_AND_FACTS_SYSTEM_PROMPT,
-    FACT_EXTRACTION_TASK_INSTRUCTION
+    FACT_EXTRACTION_TASK_INSTRUCTION,
 )
 
 token_encoder = tiktoken.encoding_for_model("gpt-3.5-turbo")
@@ -274,7 +278,7 @@ def rephrase_title(title, model="gpt-4o"):
 def generate_weekly_report(
     weekly_content_md: str,
     tweet_analysis_md: str = "",
-    llm_model="claude-3-5-sonnet-20250222"
+    llm_model="claude-3-5-sonnet-20250222",
 ):
     """Generate weekly report."""
     weekly_report = run_instructor_query(
@@ -775,7 +779,10 @@ def assess_tweet_ownership(
         tweet_username=tweet_username,
     )
     tweet_ownership = run_instructor_query(
-        system_prompt, user_prompt, llm_model=llm_model, process_id="assess_tweet_ownership"
+        system_prompt,
+        user_prompt,
+        llm_model=llm_model,
+        process_id="assess_tweet_ownership",
     )
 
     is_author_tweet = bool(
@@ -827,18 +834,23 @@ def format_paper_summary_and_facts_messages(
     paper_title: str,
     paper_content: str,
     task_instruction: str,
-    llm_model: str = "claude-3-7-sonnet-20250219"
+    llm_model: str = "claude-3-7-sonnet-20250219",
 ) -> List[Dict]:
     """Format messages for paper summarization and fact extraction with optimal caching."""
-    
+
     messages = [
         {"role": "system", "content": PAPER_SUMMARIZATION_AND_FACTS_SYSTEM_PROMPT},
-        {"role": "user", "content": f"Paper Title: {paper_title}\n\nPaper Content:\n{paper_content}"},
-        {"role": "user", "content": task_instruction}
+        {
+            "role": "user",
+            "content": f"Paper Title: {paper_title}\n\nPaper Content:\n{paper_content}",
+        },
+        {"role": "user", "content": task_instruction},
     ]
-    
-    cached_messages = add_cache_control(messages, cache_message_index=1, llm_model=llm_model)
-    
+
+    cached_messages = add_cache_control(
+        messages, cache_message_index=1, llm_model=llm_model
+    )
+
     return cached_messages
 
 
@@ -848,17 +860,17 @@ def generate_paper_interesting_facts(
     model: str = "claude-3-5-sonnet-20241022",
 ) -> str:
     """Extract up to 5 interesting, unusual, or counterintuitive facts from the paper."""
-    
+
     # Check if model supports caching (Claude models)
-    if any(provider in model.lower() for provider in ['claude', 'anthropic']):
+    if any(provider in model.lower() for provider in ["claude", "anthropic"]):
         # Use new caching approach
         messages = format_paper_summary_and_facts_messages(
             paper_title=paper_title,
             paper_content=paper_content,
             task_instruction=FACT_EXTRACTION_TASK_INSTRUCTION,
-            llm_model=model
+            llm_model=model,
         )
-        
+
         interesting_facts = run_instructor_query(
             llm_model=model,
             temperature=1,
@@ -988,9 +1000,9 @@ def analyze_tweet_patterns(
     temperature: float = 1,
     start_date: str = None,
     end_date: str = None,
-) -> Tuple[str, str]:
+) -> Tuple[str, Optional[Dict]]:
     """Analyze patterns and insights from a collection of tweets."""
-    response = run_instructor_query(
+    full_response = run_instructor_query(
         ps.TWEET_SYSTEM_PROMPT,
         ps.TWEET_ANALYSIS_USER_PROMPT.format(
             base_style=ps.TWEET_BASE_STYLE,
@@ -1006,9 +1018,46 @@ def analyze_tweet_patterns(
     )
 
     ## Extract the response from the XML elements from the string
-    response = response.split("<response>")[1].split("</response>")[0]
+    response = full_response.split("<response>")[1].split("</response>")[0]
 
-    return response
+    ## Extract tweet references if present
+    referenced_tweets = None
+    if "<tweet_references>" in full_response:
+        try:
+            tweets_section = full_response.split("<tweet_references>")[1].split(
+                "</tweet_references>"
+            )[0]
+            tweets = []
+            for tweet_block in tweets_section.split("<tweet>")[1:]:
+                if "</tweet>" in tweet_block:
+                    tweet_data = tweet_block.split("</tweet>")[0]
+                    tweet_id = (
+                        tweet_data.split("<tweet_id>")[1].split("</tweet_id>")[0]
+                        if "<tweet_id>" in tweet_data
+                        else None
+                    )
+                    mention_phrase = (
+                        tweet_data.split("<mention_phrase>")[1].split(
+                            "</mention_phrase>"
+                        )[0]
+                        if "<mention_phrase>" in tweet_data
+                        else None
+                    )
+
+                    if tweet_id and mention_phrase:
+                        tweets.append(
+                            {
+                                "tweet_id": int(tweet_id),
+                                "mention_text": mention_phrase.strip(),
+                            }
+                        )
+
+            if tweets:
+                referenced_tweets = {"tweets": tweets}
+        except:
+            referenced_tweets = None
+
+    return response, referenced_tweets
 
 
 def analyze_reddit_patterns(
@@ -1081,9 +1130,9 @@ def summarize_full_document(
     model: str = "gemini/gemini-2.5-pro",
 ) -> str:
     """Summarize a full paper markdown into a specified number of paragraphs."""
-    
+
     # Check if model supports caching (Claude models)
-    if any(provider in model.lower() for provider in ['claude', 'anthropic']):
+    if any(provider in model.lower() for provider in ["claude", "anthropic"]):
         # Use new caching approach with inline task instruction
         task_instruction = f"""<task>
 Generate a {paragraphs}-paragraph summary of the above paper.
@@ -1112,14 +1161,14 @@ Your responses should have a friendly academic tone with a casual edge:
 <response_format>
 Provide your response inside the <summary> tags. Do not include any other text.
 </response_format>"""
-        
+
         messages = format_paper_summary_and_facts_messages(
             paper_title=paper_title,
             paper_content=document,
             task_instruction=task_instruction,
-            llm_model=model
+            llm_model=model,
         )
-        
+
         summary = run_instructor_query(
             llm_model=model,
             process_id="summarize_full_document",

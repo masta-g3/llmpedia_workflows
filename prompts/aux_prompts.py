@@ -116,8 +116,6 @@ Reply in JSON format with two fields:
 </guidelines>"""
 
 
-TWEET_ANALYSIS_SYSTEM_PROMPT = "You are a terminally online millenial AI researcher addicted to X.com. You constantly monitor AI-related tweetsto keep a personal log of the main themes being discussed."
-
 TWEET_ANALYSIS_USER_PROMPT = """
 <guidelines>
 - Carefully analyze the following tweets and identify the main themes discussed.
@@ -143,6 +141,15 @@ FROM: {start_date} TO: {end_date}
 - Avoid being repetitive as compared to your previous entries. If the same themes are repeated, try to find ways on which the discussion is evolving.
 - Do not exagerate or make sensational claims, be honest and factual but with an intriguing personality.
 - Some of your previous entries have been repetitive (particularly at the introductory stage); avoid this and use more diverse (but consistent) language.
+
+- After your analysis, provide a <tweet_references> section listing the specific tweets you mentioned with their tweet IDs.
+- For each tweet you specifically reference in your analysis (with engagement metrics), include:
+  <tweet_references>
+  <tweet>
+  <tweet_id>[TWEET ID from the input]</tweet_id>
+  <mention_phrase>[Brief description of how you referenced it]</mention_phrase>
+  </tweet>
+  </tweet_references>
 </response_format>
 """
 

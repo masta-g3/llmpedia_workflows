@@ -258,14 +258,15 @@ def store_tweet_analysis(
     unique_count: int,
     thinking_process: str,
     response: str,
+    referenced_tweets: Optional[Dict] = None,
 ) -> bool:
     """Store tweet analysis results in the database."""
     try:
         query = """
             INSERT INTO tweet_analysis 
-            (start_date, end_date, unique_tweets, thinking_process, response)
+            (start_date, end_date, unique_tweets, thinking_process, response, referenced_tweets)
             VALUES 
-            (:start_date, :end_date, :unique_tweets, :thinking_process, :response)
+            (:start_date, :end_date, :unique_tweets, :thinking_process, :response, :referenced_tweets)
         """
 
         params = {
@@ -274,6 +275,7 @@ def store_tweet_analysis(
             "unique_tweets": unique_count,
             "thinking_process": thinking_process,
             "response": response,
+            "referenced_tweets": json.dumps(referenced_tweets) if referenced_tweets else None,
         }
 
         success = execute_write_query(query, params)
@@ -309,7 +311,7 @@ def get_unposted_tweet_analyses(max_age_hours: int = 3) -> pd.DataFrame:
     cutoff_time = datetime.now(pst) - timedelta(hours=max_age_hours)
     
     query = """
-        SELECT id, tstp, thinking_process, response
+        SELECT id, tstp, thinking_process, response, referenced_tweets
         FROM tweet_analysis 
         WHERE posted_at IS NULL 
         AND tstp >= :cutoff_time
@@ -620,3 +622,27 @@ def get_tweet_analysis_between(
         order_by="tstp ASC",
         index_col=None,
     )
+
+
+def get_tweet_urls_by_ids(tweet_ids: List[int]) -> Dict[int, str]:
+    """Get tweet URLs for given tweet IDs."""
+    if not tweet_ids:
+        return {}
+    
+    try:
+        result_df = simple_select_query(
+            table="llm_tweets",
+            conditions={"id": tweet_ids},
+            select_cols=["id", "link"],
+            index_col=None
+        )
+        
+        if result_df.empty:
+            return {}
+        
+        # Return dict mapping tweet_id -> link
+        return dict(zip(result_df['id'], result_df['link']))
+        
+    except Exception as e:
+        logging.error(f"Error getting tweet URLs by IDs: {str(e)}")
+        return {}
